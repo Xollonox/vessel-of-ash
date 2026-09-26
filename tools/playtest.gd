@@ -37,6 +37,9 @@ func _ready() -> void:
     await _t_hitstop()
     await _t_slash_fx()
     await _t_stalker_alt()
+    await _t_weapon_gear()
+    await _t_touch_ui()
+    await _t_trail()
     await _t_enemy_death()
     await _t_checkpoint()
     await _t_boss()
@@ -311,6 +314,47 @@ func _t_enemy_death() -> void:
     await _wait(185)
     var freed := not is_instance_valid(e)
     _ok("enemy dies at zero hp and is cleaned up", died_now and freed)
+
+func _t_weapon_gear() -> void:
+    await _await_idle()
+    var ok := _player.actor != null and _player.actor.weapon != null and _player.actor.hair != null
+    var tip := Vector3.ZERO
+    if _player.actor != null:
+        tip = _player.actor.sword_tip()
+    _ok("player wears hair + hand-socketed weapon (tip live %s)" % str(tip != Vector3.ZERO), ok and tip != Vector3.ZERO)
+
+func _t_touch_ui() -> void:
+    var tc := get_tree().get_first_node_in_group("touch_ui") as TouchControls
+    if tc == null:
+        _ok("touch UI exists", false)
+        return
+    await _await_idle()
+    var p0 := _player.global_position
+    tc.debug_set_move(Vector2(0, -1))
+    await _wait(30)
+    tc.debug_set_move(Vector2.ZERO)
+    var moved := _player.global_position.distance_to(p0)
+    await _await_idle()
+    tc.debug_press("light_attack")
+    await _wait(6)
+    var attacked := _player.state == Player.State.ATTACK
+    await _await_idle()
+    _ok("touch joystick moves + touch button attacks (%.2f m)" % moved, moved > 1.0 and attacked)
+    await _wait(30)
+
+func _t_trail() -> void:
+    await _await_idle()
+    _player.rotation.y = 0.0
+    _player.force_light()
+    var seen := false
+    for i in range(90):
+        if _player.trail != null and _player.trail.active:
+            seen = true
+            break
+        await get_tree().physics_frame
+    await _await_idle()
+    _ok("blade trail activates during a swing", seen)
+    await _wait(20)
 
 func _t_checkpoint() -> void:
     await _await_idle()

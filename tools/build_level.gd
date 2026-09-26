@@ -46,6 +46,7 @@ func _ready() -> void:
     _beat5()
     _beat6()
     _beat7()
+    _dressing()
     _actors()
     LevelKit.set_owner_recursive(root, root)
     var ps := PackedScene.new()
@@ -63,6 +64,77 @@ func _torch(parent: Node3D, pos: Vector3) -> void:
     LevelKit.box(parent, "TorchBracket", Vector3(0.22, 0.22, 0.22), pos, dark_m)
     LevelKit.sphere(parent, "TorchCore", 0.17, pos + Vector3(0, 0.34, 0), torch_m)
     LevelKit.add_light(parent, pos + Vector3(0, 0.5, 0), Color(1.0, 0.6, 0.3), 1.95, 7.5)
+
+const PROP := "res://assets/props/dungeon/"
+
+func _p(parent: Node3D, f: String, pos: Vector3, yaw: float = 0.0, s: float = 1.0) -> void:
+    LevelKit.prop(parent, PROP + f, pos, yaw, s)
+
+func _dressing() -> void:
+    var g := Node3D.new()
+    g.name = "Dressing"
+    root.add_child(g)
+    # ---- Gate of Ash ------------------------------------------------------
+    _p(g, "banner_patternA_red.gltf.glb", Vector3(-6.2, 4.4, 8.5), 0.0)
+    _p(g, "banner_patternA_red.gltf.glb", Vector3(6.2, 4.4, 8.5), 0.0)
+    _p(g, "rubble_large.gltf.glb", Vector3(-6.2, 0.0, -1.5), 0.7)
+    _p(g, "rubble_half.gltf.glb", Vector3(5.6, 0.0, 2.6), -0.5)
+    _p(g, "barrel_small.gltf.glb", Vector3(7.0, 0.0, -1.0), 0.3)
+    _p(g, "crates_stacked.gltf.glb", Vector3(-7.0, 0.0, 4.2), 0.5)
+    _p(g, "torch_lit.gltf.glb", Vector3(-7.4, 3.2, 2.0), PI * 0.5)
+    _p(g, "torch_lit.gltf.glb", Vector3(7.4, 3.2, 2.0), -PI * 0.5)
+    LevelKit.add_light(g, Vector3(-7.0, 3.9, 2.0), Color(1.0, 0.6, 0.3), 1.4, 7.0)
+    LevelKit.add_light(g, Vector3(7.0, 3.9, 2.0), Color(1.0, 0.6, 0.3), 1.4, 7.0)
+    LevelKit.embers(g, Vector3(0, 2.5, 1.0), 5.0, 16)
+    # ---- Long Descent -----------------------------------------------------
+    for z in [-11.0, -19.0, -27.0, -35.0]:
+        var y := _stair_y(z)
+        _p(g, "torch_lit.gltf.glb", Vector3(-4.6, y + 3.0, z), PI * 0.5)
+        _p(g, "rubble_half.gltf.glb", Vector3(2.4, y + 0.03, z - 2.0), 0.4)
+    # ---- Hall of Cinders --------------------------------------------------
+    for z in [-45.0, -51.0, -57.0, -62.0]:
+        _p(g, "pillar.gltf.glb", Vector3(-10.8, -21.0, z), 0.0)
+        _p(g, "pillar.gltf.glb", Vector3(10.8, -21.0, z), 0.0)
+        _p(g, "banner_patternA_red.gltf.glb", Vector3(-11.9, -17.4, z + 1.6), -PI * 0.5)
+        _p(g, "banner_patternA_red.gltf.glb", Vector3(11.9, -17.4, z + 1.6), PI * 0.5)
+    _p(g, "chest.glb", Vector3(-9.5, -21.0, -49.0), 0.6)
+    _p(g, "barrel_large.gltf.glb", Vector3(9.8, -21.0, -49.5), 0.0)
+    _p(g, "barrel_small.gltf.glb", Vector3(9.0, -21.0, -47.8), 0.4)
+    _p(g, "candle_triple.gltf.glb", Vector3(8.6, -21.0, -43.2), 0.0)
+    _p(g, "shelf_large.gltf.glb", Vector3(-11.6, -21.0, -60.0), PI * 0.5)
+    LevelKit.embers(g, Vector3(0, -19.0, -52.0), 8.0, 24)
+    # ---- Broken Gallery ---------------------------------------------------
+    _p(g, "sword_shield.gltf.glb", Vector3(-9.1, -18.6, -75.0), PI * 0.5)
+    _p(g, "sword_shield_gold.gltf.glb", Vector3(9.1, -18.6, -85.0), -PI * 0.5)
+    _p(g, "rubble_large.gltf.glb", Vector3(2.5, -21.0, -72.0), 0.3)
+    _p(g, "rubble_half.gltf.glb", Vector3(-2.0, -21.0, -88.0), -0.6)
+    _p(g, "coin_stack_large.gltf.glb", Vector3(-6.5, -17.6, -78.0), 0.0)
+    _p(g, "coin_stack_small.gltf.glb", Vector3(-6.0, -17.6, -79.2), 0.0)
+    _p(g, "shelf_large.gltf.glb", Vector3(8.9, -21.0, -76.0), -PI * 0.5)
+    _p(g, "candle_lit.gltf.glb", Vector3(8.2, -21.0, -79.0), 0.0)
+    LevelKit.embers(g, Vector3(0, -19.0, -80.0), 6.0, 18)
+    # ---- Ossuary Niche ----------------------------------------------------
+    _p(g, "chest_gold.glb", Vector3(0.0, -21.0, -108.5), 0.2)
+    _p(g, "coin_stack_large.gltf.glb", Vector3(-1.3, -21.0, -108.9), 0.0)
+    _p(g, "candle_triple.gltf.glb", Vector3(-2.4, -21.0, -106.0), 0.0)
+    _p(g, "candle_triple.gltf.glb", Vector3(2.4, -21.0, -106.0), 0.0)
+    _p(g, "banner_patternC_white.gltf.glb", Vector3(-4.5, -17.4, -112.4), 0.0)
+    _p(g, "banner_patternC_white.gltf.glb", Vector3(4.5, -17.4, -112.4), 0.0)
+    # ---- Vessel Chamber ---------------------------------------------------
+    for sx in [-1.0, 1.0]:
+        for z in [-116.0, -128.0]:
+            _p(g, "pillar_decorated.gltf.glb", Vector3(sx * 6.8, -21.0, z), 0.0, 0.8)
+    _p(g, "candle_triple.gltf.glb", Vector3(-1.9, -21.0, -120.6), 0.0)
+    _p(g, "candle_triple.gltf.glb", Vector3(1.9, -21.0, -120.6), 0.0)
+    _p(g, "chest.glb", Vector3(-5.6, -21.0, -127.0), -0.4)
+    # ---- Choir's Maw ------------------------------------------------------
+    _p(g, "floor_tile_big_spikes.glb", Vector3(-6.0, -21.0, -140.0), 0.0)
+    _p(g, "floor_tile_big_spikes.glb", Vector3(6.0, -21.0, -140.0), 0.0)
+    _p(g, "banner_shield_red.gltf.glb", Vector3(-9.0, -14.6, -158.2), 0.0, 1.2)
+    _p(g, "banner_shield_red.gltf.glb", Vector3(9.0, -14.6, -158.2), 0.0, 1.2)
+    _p(g, "rubble_large.gltf.glb", Vector3(-9.5, -21.0, -137.0), 0.4)
+    _p(g, "rubble_half.gltf.glb", Vector3(9.0, -21.0, -150.0), -0.3)
+    LevelKit.embers(g, Vector3(0, -19.0, -145.0), 9.0, 28)
 
 func _stair_y(z: float) -> float:
     var k := (-z - 7.0) / 0.8
@@ -260,6 +332,9 @@ func _actors() -> void:
     var hud := GameHud.new()
     hud.name = "Hud"
     root.add_child(hud)
+    var tc := TouchControls.new()
+    tc.name = "TouchControls"
+    root.add_child(tc)
     var player := Player.new()
     player.name = "Player"
     root.add_child(player)

@@ -13,8 +13,8 @@ signal parried(target: Node3D)
 
 enum State { IDLE, MOVE, ATTACK, DODGE, PARRY, HURT, DEAD }
 
-const WALK_SPEED := 5.6
-const ACCEL := 34.0
+const WALK_SPEED := 5.9
+const ACCEL := 38.0
 const FRICTION := 26.0
 const DODGE_SPEED := 12.5
 const DODGE_TIME := 0.34
@@ -32,7 +32,7 @@ const LIGHT := [
     {"clip": "Sword_Regular_B", "speed": 1.10, "hit_at": 0.27, "dmg": 12.0},
     {"clip": "Sword_Regular_C", "speed": 1.30, "hit_at": 0.46, "dmg": 18.0},
 ]
-const HEAVY := {"clip": "TreeChopping", "speed": 1.0, "hit_at": 0.52, "dmg": 30.0}
+const HEAVY := {"clip": "Sword_Heavy_Combo", "speed": 1.0, "hit_at": 0.45, "dmg": 30.0}
 
 var max_health := 100.0
 var health := 100.0
@@ -44,6 +44,7 @@ var lock_target: Node3D = null
 var combo_index := 0
 var actor: AnimatedActor
 var cam: CameraRig
+var trail: BladeTrail
 
 var _buffered := ""
 var _buffered_at := -10.0
@@ -69,7 +70,15 @@ func _ready() -> void:
     add_child(shape)
     actor = AnimatedActor.new()
     actor.name = "Actor"
+    actor.skin_texture = "res://assets/models/characters/skins/T_Male_KAEL.png"
+    actor.weapon_path = "res://assets/weapons/sword_1handed.gltf"
+    actor.weapon_scale = 0.55
+    actor.weapon_rot = Vector3(-90, 0, 0)
+    actor.hair_path = "res://assets/hair/Hair_SimpleParted.gltf"
     add_child(actor)
+    trail = BladeTrail.new()
+    trail.name = "BladeTrail"
+    add_child(trail)
     _spawn_yaw = rotation.y
     _play_idle()
 
@@ -102,6 +111,19 @@ func _physics_process(delta: float) -> void:
             _decay(delta, 0.8)
     move_and_slide()
     _handle_buffers()
+    _update_trail()
+
+func _update_trail() -> void:
+    if trail == null:
+        return
+    var swinging := state == State.ATTACK and float(_attack.get("dmg", 0.0)) > 0.0 \
+        and state_t <= float(_attack.get("hit_at", 0.0)) + 0.30
+    if swinging and actor != null and actor.weapon != null:
+        if not trail.active:
+            trail.begin()
+        trail.push_point(actor.sword_tip())
+    elif trail.active:
+        trail.end()
 
 func _decay(delta: float, factor: float) -> void:
     velocity.x = move_toward(velocity.x, 0.0, FRICTION * factor * delta)

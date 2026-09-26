@@ -23,6 +23,7 @@ You are **Kael Ardyn**, descending into **The Cinderhold** to silence
 | Dodge (i-frames frame one) | Space / A |
 | Lock on | Q / middle mouse |
 | Interact | E |
+| Touch | virtual stick (left) · drag right side to look · on-screen buttons |
 
 ## Run it
 
@@ -54,6 +55,15 @@ python3 tools/gen_audio.py
 ./tools/shot.sh /data/shots/hero.png --cam=0,3.2,11 --look=0,1.2,1
 ./tools/shot.sh /data/shots/combat.png --cam=2.6,1.75,-0.75 --look=0,1.1,-0.75 --combat
 
+# gear tuning close-ups (weapon socket transforms)
+RES=1280x720 ./tools/gear.sh /data/shots/gear.png --rot=-90,0,0 --clip=Sword_Regular_A
+
+# regenerate the recoloured character skins
+python3 tools/gen_skins.py
+
+# install export templates after a sandbox reset
+bash tools/install_templates.sh
+
 # lighting contract check on a screenshot
 python3 tools/contract.py /data/shots/hero.png
 ```
@@ -68,9 +78,14 @@ python3 tools/contract.py /data/shots/hero.png
   Universal Animation Library 2 (43 clips) retargeted at load time.
 - **Input buffering** survives hitstun; whiffed swings carry recovery, connected
   swings flow straight back to idle.
-- **Game feel**: hit-stop on connect (heavier on heavy attacks), slash crescents,
-  impact sparks, enemy hit-flash, camera shake + FOV punch, and an ember telegraph
-  for unblockable attacks.
+- **Game feel**: hit-stop on connect (heavier on heavy attacks), blade trails,
+  slash crescents, impact sparks, enemy hit-flash, camera shake + FOV punch, and an
+  ember telegraph for unblockable attacks.
+- **Gear**: KayKit CC0 weapons socketed to the hand bone, Quaternius hairstyles
+  posed onto the head each frame, and hand-tinted armour textures per character
+  (`tools/gen_skins.py`).
+- **Touch**: a virtual joystick + action buttons (`scripts/ui/touch_controls.gd`)
+  that drive the same Input actions as the keyboard — phones and tablets work.
 
 ## CI
 

@@ -19,4 +19,6 @@ cp T_Hair_1_Normal.png T_Hair_1_Normal_png.png
 cd ../../animations
 curl -sfL -o UAL2_Standard.glb "https://raw.githubusercontent.com/$R/main/Universal%20Animation%20Library%202%5BStandard%5D/Universal%20Animation%20Library%202%5BStandard%5D/Unreal-Godot/UAL2_Standard.glb"
 test "$(stat -c%s UAL2_Standard.glb)" -gt 1000000
-echo "assets fetched (CC0, Quaternius)"
+cd ../..
+bash tools/fetch_assets_extra.sh
+echo "assets fetched (CC0: Quaternius + KayKit + Kenney)"

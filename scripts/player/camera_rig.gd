@@ -26,8 +26,7 @@ func _ready() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
     if event is InputEventMouseMotion and Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED:
-        yaw -= event.relative.x * sensitivity
-        pitch = clampf(pitch - event.relative.y * sensitivity, -1.0, 0.45)
+        apply_look(event.relative.x, event.relative.y)
     elif event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_ESCAPE:
         if Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED:
             Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
@@ -64,6 +63,10 @@ func _physics_process(delta: float) -> void:
 
 func add_shake(amount: float) -> void:
     shake = minf(1.4, shake + amount)
+
+func apply_look(dx: float, dy: float) -> void:
+    yaw -= dx * sensitivity
+    pitch = clampf(pitch - dy * sensitivity, -1.0, 0.45)
 
 func fov_punch(amount: float) -> void:
     if _cam == null:

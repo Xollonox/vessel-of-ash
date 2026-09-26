@@ -1,25 +1,43 @@
 class_name AnimatedActor
 extends Node3D
-## Character model + retargeted animation library.
+## Character model + retargeted animation library + gear.
 ##
 ## The Quaternius character models and the Universal Animation Library share the
 ## same 65-bone rig, so retargeting is a deterministic path rewrite: every track
 ## that points at the library's skeleton is re-pointed at this model's skeleton.
+##
+## Gear:
+## - weapon: socketed to the right hand with a BoneAttachment3D
+## - hair:   worn by copying our skeleton's bone poses onto the hair's own
+##           skeleton every frame (same rig, so it is a direct name match)
+## - skin:   a recoloured albedo texture applied per instance, so shared
+##           materials are never mutated
 
 @export var model_path: String = "res://assets/models/characters/Superhero_Male_FullBody.gltf"
 @export var anim_path: String = "res://assets/animations/UAL2_Standard.glb"
 @export var scale_factor: float = 1.0
 @export var model_yaw_offset: float = 0.0
+@export var skin_texture: String = ""
+@export var weapon_path: String = ""
+@export var weapon_scale: float = 0.55
+@export var weapon_rot: Vector3 = Vector3.ZERO
+@export var weapon_offset: Vector3 = Vector3.ZERO
+@export var hair_path: String = ""
 
 signal anim_finished(clip: String)
 
 var skeleton: Skeleton3D
 var player: AnimationPlayer
 var model: Node3D
+var weapon: Node3D
+var weapon_tip: Marker3D
+var hair: Node3D
 var ready_ok := false
 
 var _clips := {}
 var _flash_gen := 0
+var _hair_skel: Skeleton3D
+var _hair_map: Array = []
 
 func _ready() -> void:
     _build()
@@ -80,6 +98,81 @@ func _build() -> void:
     ready_ok = true
     player.animation_finished.connect(_on_anim_finished)
     print("[AnimatedActor] ", model_path.get_file(), ": ", _clips.size(), " clips retargeted, ", dropped, " tracks dropped")
+    if skin_texture != "":
+        _apply_skin()
+    if weapon_path != "":
+        _attach_weapon()
+    if hair_path != "":
+        _attach_hair()
+
+func _process(_delta: float) -> void:
+    if _hair_skel == null or skeleton == null:
+        return
+    for i in _hair_map.size():
+        var j: int = _hair_map[i]
+        if j >= 0:
+            _hair_skel.set_bone_pose(j, skeleton.get_bone_pose(i))
+
+func _apply_skin() -> void:
+    var tex: Texture2D = load(skin_texture)
+    if tex == null:
+        push_warning("AnimatedActor: cannot load skin " + skin_texture)
+        return
+    for mi in _meshes(model):
+        if mi.mesh == null:
+            continue
+        for s in mi.mesh.get_surface_count():
+            var base := mi.get_active_material(s)
+            var m: StandardMaterial3D
+            if base is StandardMaterial3D:
+                m = (base as StandardMaterial3D).duplicate()
+            else:
+                m = StandardMaterial3D.new()
+            m.albedo_texture = tex
+            mi.set_surface_override_material(s, m)
+
+func _attach_weapon() -> void:
+    var ps: PackedScene = load(weapon_path)
+    if ps == null:
+        push_warning("AnimatedActor: cannot load weapon " + weapon_path)
+        return
+    var att := BoneAttachment3D.new()
+    att.name = "WeaponSocket"
+    att.bone_name = "hand_r"
+    skeleton.add_child(att)
+    weapon = ps.instantiate()
+    weapon.name = "Weapon"
+    att.add_child(weapon)
+    weapon.scale = Vector3.ONE * weapon_scale
+    weapon.rotation_degrees = weapon_rot
+    weapon.position = weapon_offset
+    weapon_tip = Marker3D.new()
+    weapon_tip.name = "Tip"
+    weapon_tip.position = Vector3(0, 1.45, 0)
+    weapon.add_child(weapon_tip)
+
+func sword_tip() -> Vector3:
+    if weapon_tip != null and is_instance_valid(weapon_tip):
+        return weapon_tip.global_position
+    return Vector3.ZERO
+
+func _attach_hair() -> void:
+    var ps: PackedScene = load(hair_path)
+    if ps == null:
+        push_warning("AnimatedActor: cannot load hair " + hair_path)
+        return
+    hair = ps.instantiate()
+    hair.name = "Hair"
+    add_child(hair)
+    hair.scale = Vector3.ONE * scale_factor
+    hair.rotation.y = model_yaw_offset
+    _hair_skel = _find(hair, "Skeleton3D") as Skeleton3D
+    if _hair_skel == null or skeleton == null:
+        push_warning("AnimatedActor: hair has no skeleton")
+        return
+    _hair_map.resize(skeleton.get_bone_count())
+    for i in skeleton.get_bone_count():
+        _hair_map[i] = _hair_skel.find_bone(skeleton.get_bone_name(i))
 
 func _on_anim_finished(clip: String) -> void:
     anim_finished.emit(clip)

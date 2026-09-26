@@ -1,19 +1,39 @@
 # Vessel of Ash — Progress & How to Resume
 
-## State: playable vertical slice, 20/20 automated checks green, published
+## State: playable vertical slice, 23/23 automated checks green, published
 
 - **Browser build (GitHub Pages):** https://xollonox.github.io/vessel-of-ash/
 - **Public repo:** https://github.com/Xollonox/vessel-of-ash
 - **CI:** `.github/workflows/deploy.yml` — fetch assets → import → playtest → export
   Web + Linux + Windows → deploy to Pages → attach desktop builds to a release.
 
+## v0.3 additions (touch + gear + world)
+
+- **Touch controls** (`scripts/ui/touch_controls.gd`): floating virtual joystick
+  (analog strength on the move actions), six action buttons, drag-to-look on the
+  right half, auto-shows on touchscreens / first touch event. Verified in a real
+  browser with touch emulation.
+- **Weapons**: KayKit CC0 sword/dagger/2-handed sword socketed to `hand_r` with a
+  `BoneAttachment3D`; blade trail sampled from a tip marker during swings
+  (`scripts/fx/trail.gd`). Heavy attack now uses `Sword_Heavy_Combo`.
+- **Hair + tinted armour**: Quaternius hairstyles are posed by copying bone poses
+  onto the hair skeleton every frame; `tools/gen_skins.py` bakes five recoloured
+  1024² armour textures (Kael / Thrall / Stalker / Warden / Boss).
+- **World dressing**: ~50 KayKit dungeon props (pillars, banners, torches, chests,
+  barrels, shelves, candles, spike traps, sword displays) + drifting ember
+  particles in every room; light budget raised to 30.
+- **Real SFX**: Kenney CC0 impact + RPG packs wired into swings, hits, parry,
+  footsteps, dodges, telegraphs and deaths, with procedural fallbacks.
+- **Movement**: walk speed 5.6 → 5.9, acceleration 34 → 38.
+
 ## Verified
 
-- `tools/playtest.tscn` — **20/20 passing** (movement, camera-relative input,
+- `tools/playtest.tscn` — **23/23 passing** (movement, camera-relative input,
   dodge i-frames frame one, combo 12/12/18, heavy 30, front-arc only, enemy cone,
   LOS blocking, parry stagger, unblockable beats parry, hit-stop freeze + restore,
-  slash VFX spawn, stalker unblockable leap, enemy death cleanup, checkpoint heal +
-  respawn, boss phase transitions).
+  slash VFX spawn, stalker unblockable leap, weapon+hair gear, touch joystick +
+  button, blade trail, enemy death cleanup, checkpoint heal + respawn, boss phase
+  transitions).
 - Web export boots in a browser (WebGL2 / Compatibility, single-threaded build).
 - Level generates clean: 25/28 lights used, ~109 KB scene.
 - All 43 UAL2 clips retarget onto the 65-bone character with 0 tracks dropped.

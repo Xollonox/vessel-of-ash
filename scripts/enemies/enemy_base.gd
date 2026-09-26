@@ -18,6 +18,8 @@ const CONFIG := {
         "model": "res://assets/models/characters/Superhero_Male_FullBody.gltf",
         "walk": "Zombie_Walk_Fwd", "walk_speed": 1.0, "attack": "Zombie_Scratch",
         "atk_speed": 1.0, "name": "Thrall",
+        "skin": "res://assets/models/characters/skins/T_Male_THRALL.png",
+        "hair": "res://assets/hair/Hair_Beard.gltf",
     },
     "stalker": {
         "hp": 45.0, "speed": 4.3, "dmg": 14.0, "range": 2.6, "aggro": 13.0,
@@ -29,6 +31,10 @@ const CONFIG := {
         "alt_every": 3,
         "alt": {"windup": 0.62, "strike": 0.16, "dmg": 22.0, "lunge": 9.0,
                 "unblockable": true, "clip": "Sword_Regular_C", "atk_speed": 0.85},
+        "skin": "res://assets/models/characters/skins/T_Female_STALKER.png",
+        "hair": "res://assets/hair/Hair_Long.gltf",
+        "weapon": "res://assets/weapons/dagger.gltf", "weapon_scale": 0.62,
+        "weapon_rot": Vector3(-90, 0, 0),
     },
     "warden": {
         "hp": 140.0, "speed": 2.0, "dmg": 34.0, "range": 2.9, "aggro": 10.0,
@@ -37,6 +43,10 @@ const CONFIG := {
         "model": "res://assets/models/characters/Superhero_Male_FullBody.gltf",
         "walk": "Walk_Carry", "walk_speed": 0.85, "attack": "TreeChopping",
         "atk_speed": 0.8, "name": "Warden",
+        "skin": "res://assets/models/characters/skins/T_Male_WARDEN.png",
+        "hair": "res://assets/hair/Hair_Buzzed.gltf",
+        "weapon": "res://assets/weapons/sword_2handed.gltf", "weapon_scale": 0.5,
+        "weapon_rot": Vector3(-90, 0, 0),
     },
     "boss": {
         "hp": 600.0, "speed": 2.4, "dmg": 18.0, "range": 3.4, "aggro": 20.0,
@@ -45,6 +55,7 @@ const CONFIG := {
         "model": "res://assets/models/characters/Superhero_Male_FullBody.gltf",
         "walk": "Zombie_Walk_Fwd", "walk_speed": 0.85, "attack": "Zombie_Scratch",
         "atk_speed": 0.9, "name": "The Ossuary Choir",
+        "skin": "res://assets/models/characters/skins/T_Male_BOSS.png",
     },
 }
 
@@ -87,6 +98,11 @@ func _ready() -> void:
     actor.name = "Actor"
     actor.model_path = String(cfg.model)
     actor.scale_factor = float(cfg.scale)
+    actor.skin_texture = String(cfg.get("skin", ""))
+    actor.weapon_path = String(cfg.get("weapon", ""))
+    actor.weapon_scale = float(cfg.get("weapon_scale", 0.55))
+    actor.weapon_rot = cfg.get("weapon_rot", Vector3.ZERO)
+    actor.hair_path = String(cfg.get("hair", ""))
     add_child(actor)
     _player = get_tree().get_first_node_in_group("player")
     actor.play_loop(String(cfg.walk), float(cfg.walk_speed) * 0.0 + 0.0)

@@ -44,8 +44,16 @@ jobs:
       - name: Fetch CC0 assets (Quaternius characters + UAL2)
         run: bash tools/fetch_assets.sh
 
+      - name: Generate recoloured character skins
+        run: |
+          python3 -m pip install --quiet pillow numpy
+          python3 tools/gen_skins.py
+
       - name: Import project
         run: godot --headless --path . --import
+
+      - name: Regenerate level scene from code
+        run: godot --headless --path . res://tools/build_level.tscn
 
       - name: Playtest suite
         run: godot --headless --path . res://tools/playtest.tscn
@@ -53,19 +61,21 @@ jobs:
       - name: Export web build
         run: |
           mkdir -p _site/play
+          touch _site/.gdignore
           godot --headless --path . --export-release "Web" "$GITHUB_WORKSPACE/_site/play/index.html"
 
       - name: Export desktop builds
         run: |
-          mkdir -p dist
-          godot --headless --path . --export-release "Linux" "$GITHUB_WORKSPACE/dist/vessel_of_ash_linux.x86_64"
-          godot --headless --path . --export-release "Windows Desktop" "$GITHUB_WORKSPACE/dist/VesselOfAsh.exe"
-          chmod +x dist/vessel_of_ash_linux.x86_64
+          mkdir -p /tmp/dist
+          godot --headless --path . --export-release "Linux" "/tmp/dist/vessel_of_ash_linux.x86_64"
+          godot --headless --path . --export-release "Windows Desktop" "/tmp/dist/VesselOfAsh.exe"
+          chmod +x /tmp/dist/vessel_of_ash_linux.x86_64
 
       - name: Package downloads
         run: |
-          cd dist && zip -q -r ../_site/VesselOfAsh_windows.zip VesselOfAsh.exe && cd ..
-          tar -czf _site/vessel_of_ash_linux.tar.gz -C dist vessel_of_ash_linux.x86_64
+          cp docs/BUILD_README.txt /tmp/dist/README.txt
+          cd /tmp/dist && zip -q -r "$GITHUB_WORKSPACE/_site/VesselOfAsh_windows.zip" VesselOfAsh.exe README.txt 2>/dev/null || zip -q -r "$GITHUB_WORKSPACE/_site/VesselOfAsh_windows.zip" VesselOfAsh.exe
+          tar -czf "$GITHUB_WORKSPACE/_site/vessel_of_ash_linux.tar.gz" -C /tmp/dist vessel_of_ash_linux.x86_64
 
       - name: Assemble site
         run: cp -r site/. _site/
@@ -98,15 +108,16 @@ jobs:
       - name: Publish release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v0.2
-          name: "Vessel of Ash — v0.2 (vertical slice)"
+          tag_name: v0.3
+          name: "Vessel of Ash — v0.3 (vertical slice)"
           body: |
             Third-person action vertical slice. Windows + Linux builds, built from source by CI.
 
             Play in your browser: https://${{ github.repository_owner }}.github.io/vessel-of-ash/
 
-            - 20/20 automated gameplay checks green
-            - Hit-stop, slash arcs, impact sparks, stalker unblockable leap
+            - 23/23 automated gameplay checks green
+            - Sword + blade trail, hair & tinted armour, dungeon dressing
+            - Kenney CC0 sound effects, touchscreen controls
           files: |
             _site/VesselOfAsh_windows.zip
             _site/vessel_of_ash_linux.tar.gz

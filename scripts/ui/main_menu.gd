@@ -50,14 +50,14 @@ func _ready() -> void:
     box.add_child(spacer2)
 
     var controls := Label.new()
-    controls.text = "WASD move  ·  Mouse look  ·  J / LMB light  ·  K / RMB heavy\nL parry  ·  Space dodge  ·  Q lock-on  ·  E interact"
+    controls.text = "WASD / stick move  ·  Mouse / drag look  ·  J light  ·  K heavy  ·  L parry\nSpace dodge  ·  Q lock-on  ·  E interact  —  touch: virtual stick + buttons"
     controls.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     controls.add_theme_font_size_override("font_size", 14)
     controls.add_theme_color_override("font_color", Color(0.52, 0.48, 0.44))
     box.add_child(controls)
 
     var foot := Label.new()
-    foot.text = "vertical slice · v2"
+    foot.text = "vertical slice · v3"
     foot.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     foot.add_theme_font_size_override("font_size", 12)
     foot.add_theme_color_override("font_color", Color(0.35, 0.32, 0.30))

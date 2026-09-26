@@ -12,10 +12,11 @@ for f in Superhero_Male_FullBody.gltf Superhero_Male_FullBody.bin \
          T_Hair_2_BaseColor.png T_Hair_2_Normal.png \
          T_Superhero_Male_Dark.png T_Superhero_Male_Normal.png T_Superhero_Male_Roughness.png \
          T_Superhero_Female_Dark_BaseColor.png T_Superhero_Female_Normal.png T_Superhero_Female_Roughness.png; do
-  curl -sL -o "$f" "https://raw.githubusercontent.com/$R/main/$B/$f"
+  curl -sfL -o "$f" "https://raw.githubusercontent.com/$R/main/$B/$f"
 done
 cp T_Eye_Normal.png T_Eye_Normal_png.png
 cp T_Hair_1_Normal.png T_Hair_1_Normal_png.png
-cd ../animations
-curl -sL -o UAL2_Standard.glb "https://raw.githubusercontent.com/$R/main/Universal%20Animation%20Library%202%5BStandard%5D/Universal%20Animation%20Library%202%5BStandard%5D/Unreal-Godot/UAL2_Standard.glb"
+cd ../../animations
+curl -sfL -o UAL2_Standard.glb "https://raw.githubusercontent.com/$R/main/Universal%20Animation%20Library%202%5BStandard%5D/Universal%20Animation%20Library%202%5BStandard%5D/Unreal-Godot/UAL2_Standard.glb"
+test "$(stat -c%s UAL2_Standard.glb)" -gt 1000000
 echo "assets fetched (CC0, Quaternius)"

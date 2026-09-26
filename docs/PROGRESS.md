@@ -82,3 +82,9 @@ tools/shot.gd                  headless screenshots (--combat for a VFX frame)
 2. More enemy variety in attack patterns; a warden variant that feints.
 3. Weapon trail on the character's swing arm; footstep dust.
 4. Trim the web build (63 MB) — drop unused textures, downscale PBR maps.
+
+## Publishing notes
+
+GitHub Pages must be enabled once by hand (GitHub won't let the workflow's token create
+it): repo **Settings → Pages → Source = GitHub Actions**. After that every push to `main`
+re-deploys automatically.

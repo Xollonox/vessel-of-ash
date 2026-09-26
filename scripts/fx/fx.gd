@@ -44,6 +44,40 @@ static func sparks(parent: Node, pos: Vector3, color: Color, count: int = 14,
 
 static func slash(parent: Node, at: Vector3, yaw: float, big: bool = false,
         color: Color = Color(1.0, 0.88, 0.62, 0.95)) -> void:
+    _slash_impl(parent, at, yaw, big, color)
+
+## Ground telegraph / impact ring: a flat disc that snaps out to `radius` and fades.
+## `grow_time` of 0 means "instant shockwave", anything longer reads as a warning.
+static func ring(parent: Node, at: Vector3, radius: float = 5.0,
+        color: Color = Color(1.0, 0.5, 0.2), grow_time: float = 0.3) -> void:
+    if parent == null or not parent.is_inside_tree():
+        return
+    var mi := MeshInstance3D.new()
+    var disc := TorusMesh.new()
+    disc.inner_radius = radius * 0.86
+    disc.outer_radius = radius
+    disc.rings = 32
+    disc.ring_segments = 6
+    mi.mesh = disc
+    var m := StandardMaterial3D.new()
+    m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+    m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+    m.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+    m.albedo_color = color
+    m.disable_receive_shadows = true
+    mi.material_override = m
+    mi.add_to_group("fx")
+    parent.add_child(mi)
+    mi.global_position = at + Vector3(0, 0.08, 0)
+    var t := mi.get_tree().create_tween()
+    var start := 0.15 if grow_time <= 0.0 else 0.55
+    mi.scale = Vector3.ONE * start
+    t.tween_property(mi, "scale", Vector3.ONE, maxf(grow_time, 0.08))
+    t.parallel().tween_property(m, "albedo_color:a", 0.0, maxf(grow_time, 0.08) + 0.22)
+    t.tween_callback(mi.queue_free)
+
+static func _slash_impl(parent: Node, at: Vector3, yaw: float, big: bool,
+        color: Color = Color(1.0, 0.88, 0.62, 0.95)) -> void:
     if parent == null or not parent.is_inside_tree():
         return
     var mi := MeshInstance3D.new()

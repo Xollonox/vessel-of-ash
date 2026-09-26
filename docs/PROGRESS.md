@@ -1,11 +1,31 @@
 # Vessel of Ash — Progress & How to Resume
 
-## State: playable vertical slice, 28/28 automated checks green, published
+## State: playable vertical slice, 33/33 automated checks green, published
 
 - **Browser build (GitHub Pages):** https://xollonox.github.io/vessel-of-ash/
 - **Public repo:** https://github.com/Xollonox/vessel-of-ash
 - **CI:** `.github/workflows/deploy.yml` — fetch assets → import → playtest → export
   Web + Linux + Windows → deploy to Pages → attach desktop builds to a release.
+
+## v0.5 additions (score + boss spectacle + combat depth)
+
+- **Original score** (`tools/gen_audio.py`): a 12 s wind/rumble ambient bed, a 20 s
+  crypt drone with struck bells, and a 16 s 160 bpm Choir theme (kick + off-beat
+  tick + rising drone). `AudioManager.play_music()` crossfades beds over 1.6 s;
+  `scripts/level/level.gd` starts the crypt bed on wake-up and switches to the
+  Choir theme when the boss aggros. The workflow now runs `gen_audio.py` so CI
+  builds ship the score.
+- **Boss**: rebuilt on the skeleton rig (the old UAL2 clip names no longer existed).
+  New **slam** move with an expanding ground-ring telegraph (`Fx.ring`) and a
+  5.4 m radius check, bone volleys, summons (phase 3 also summons stalkers), and
+  the boss now rises with `Skeletons_Awaken_Standing`.
+- **Combat depth**: heavy chains into a heavy finisher (30 + 22, bigger hit-stop and
+  FOV punch), sprinting + light fires a lunging running slash (20 dmg, 6.4 m lunge),
+  on-screen combo counter driven by `Hud.register_hit()`.
+- **Enemy personality**: wardens feint the overhead into a fast poke (34 % of the
+  time), ranged mages blink 6 m away when the player closes inside 72 % of their
+  keep-away band (4 s cooldown, ring + spark VFX at both ends).
+- **Touch**: pushing the virtual stick past 88 % of its radius sprints.
 
 ## v0.4 additions (skeleton legions + architecture + feel)
 
@@ -52,7 +72,7 @@
 
 ## Verified
 
-- `tools/playtest.tscn` — **28/28 passing** (movement, camera-relative input,
+- `tools/playtest.tscn` — **33/33 passing** (movement, camera-relative input,
   dodge i-frames frame one, combo 12/12/18, heavy 30, front-arc only, enemy cone,
   LOS blocking, parry stagger, unblockable beats parry, hit-stop freeze + restore,
   slash VFX spawn, stalker unblockable leap, weapon+hair gear, touch joystick +

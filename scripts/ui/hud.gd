@@ -22,6 +22,11 @@ var _victory_root: Control
 var _victory_stats: Label
 var _player: Player
 var _time := 0.0
+var _combo_root: Control
+var _combo_label: Label
+var _combo_t := 0.0
+var _combo := 0
+var _combo_last_state := -1
 
 func _ready() -> void:
     add_to_group("hud")
@@ -36,6 +41,35 @@ func _ready() -> void:
     _build_parry()
     _build_defeat()
     _build_victory()
+    _build_combo()
+
+## Combo counter: pops on every connect, fades out when the chain drops.
+func _build_combo() -> void:
+    _combo_root = Control.new()
+    _combo_root.set_anchors_preset(Control.PRESET_CENTER_TOP)
+    _combo_root.position = Vector2(-60.0, 96.0)
+    _combo_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    add_child(_combo_root)
+    _combo_label = Label.new()
+    _combo_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    _combo_label.custom_minimum_size = Vector2(120.0, 0.0)
+    _combo_label.add_theme_font_size_override("font_size", 34)
+    _combo_label.add_theme_color_override("font_color", Color(1.0, 0.86, 0.55))
+    _combo_label.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.7))
+    _combo_label.add_theme_constant_override("shadow_offset_x", 2)
+    _combo_label.add_theme_constant_override("shadow_offset_y", 2)
+    _combo_root.add_child(_combo_label)
+    _combo_root.modulate.a = 0.0
+
+## Called by the player on every connected swing.
+func register_hit(chain: int) -> void:
+    _combo = chain
+    _combo_t = 2.2
+    _combo_label.text = "x%d" % chain
+    _combo_root.modulate.a = 1.0
+    _combo_root.scale = Vector2(1.25, 1.25)
+    var tw := create_tween()
+    tw.tween_property(_combo_root, "scale", Vector2.ONE, 0.14)
 
 func _mk_full_rect(c: Color) -> ColorRect:
     var r := ColorRect.new()
@@ -317,6 +351,12 @@ func _process(delta: float) -> void:
     _time += delta
     if _player == null or not is_instance_valid(_player):
         _player = get_tree().get_first_node_in_group("player") as Player
+    if _combo_t > 0.0:
+        _combo_t -= delta
+        if _combo_t <= 0.85:
+            _combo_root.modulate.a = clampf(_combo_t / 0.85, 0.0, 1.0)
+        if _combo_t <= 0.0:
+            _combo = 0
     if _player != null and is_instance_valid(_player):
         var ready := Time.get_ticks_msec() / 1000.0 >= _player.dodge_ready_at
         _dodge_pip.color = Color(0.9, 0.62, 0.28) if ready else Color(0.34, 0.3, 0.28)

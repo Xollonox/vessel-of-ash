@@ -31,7 +31,7 @@ func take_damage(amount: float, from: Vector3, opts: Dictionary = {}) -> Variant
         _internal_stagger = true
         stagger(1.2)
         _internal_stagger = false
-        actor.play_once("Chest_Open", 1.0)
+        actor.play_once("Spellcast_Raise", 1.0)
     return res
 
 func stagger(t: float) -> void:
@@ -53,7 +53,9 @@ func _physics_process(delta: float) -> void:
                 _set_state(State.CHASE)
                 aggroed.emit()
                 AudioManager.play_3d("boss_roar", global_position, -2.0)
-                actor.play_once("Chest_Open", 1.0)
+                actor.play_once("Spellcast_Raise", 1.0)
+        State.RISE:
+            _process_rise(delta)
         State.CHASE:
             _process_chase(delta)
         State.WINDUP:
@@ -101,6 +103,9 @@ func _begin_move() -> void:
     _move = _queue.pop_front()
     _set_state(State.WINDUP)
     actor.play_once(String(_move.anim), float(_move.speed))
+    if String(_move.get("type", "")) == "slam":
+        # expanding ground ring: the arena itself tells you to move
+        Fx.ring(get_parent(), global_position, 5.6, Color(1.0, 0.42, 0.16), float(_move.get("windup", 1.0)))
     if bool(_move.get("unblockable", false)):
         AudioManager.play_3d("telegraph", global_position, 0.0, 0.7)
         Fx.sparks(get_parent(), global_position + Vector3(0, 2.0, 0), Color(1.0, 0.3, 0.12), 24, 4.0, 0.55, 0.16)
@@ -110,27 +115,28 @@ func _begin_move() -> void:
 func _build_queue() -> Array:
     if phase == 1:
         return [
-            {"type": "melee", "anim": "Zombie_Scratch", "speed": 0.9, "windup": 0.8, "strike": 0.2, "recover": 0.7, "dmg": 18.0},
-            {"type": "volley", "anim": "OverhandThrow", "speed": 0.9, "windup": 0.9, "strike": 0.3, "recover": 0.8, "bolts": 5},
-            {"type": "melee", "anim": "Zombie_Scratch", "speed": 0.9, "windup": 0.8, "strike": 0.2, "recover": 0.7, "dmg": 18.0},
-            {"type": "volley", "anim": "OverhandThrow", "speed": 0.9, "windup": 0.9, "strike": 0.3, "recover": 0.8, "bolts": 6},
+            {"type": "melee", "anim": "2H_Melee_Attack_Chop", "speed": 0.9, "windup": 0.8, "strike": 0.2, "recover": 0.7, "dmg": 18.0},
+            {"type": "volley", "anim": "Spellcast_Shoot", "speed": 0.9, "windup": 0.9, "strike": 0.3, "recover": 0.8, "bolts": 5},
+            {"type": "slam", "anim": "2H_Melee_Attack_Slice", "speed": 0.8, "windup": 1.0, "strike": 0.2, "recover": 0.9, "dmg": 26.0},
+            {"type": "volley", "anim": "Spellcast_Shoot", "speed": 0.9, "windup": 0.9, "strike": 0.3, "recover": 0.8, "bolts": 6},
         ]
     if phase == 2:
         var q := [
-            {"type": "volley", "anim": "OverhandThrow", "speed": 1.0, "windup": 0.8, "strike": 0.3, "recover": 0.7, "bolts": 6},
-            {"type": "melee", "anim": "Zombie_Scratch", "speed": 1.0, "windup": 0.7, "strike": 0.2, "recover": 0.6, "dmg": 18.0},
+            {"type": "volley", "anim": "Spellcast_Shoot", "speed": 1.0, "windup": 0.8, "strike": 0.3, "recover": 0.7, "bolts": 6},
+            {"type": "melee", "anim": "2H_Melee_Attack_Chop", "speed": 1.0, "windup": 0.7, "strike": 0.2, "recover": 0.6, "dmg": 18.0},
+            {"type": "slam", "anim": "2H_Melee_Attack_Spin", "speed": 0.85, "windup": 1.0, "strike": 0.2, "recover": 0.85, "dmg": 30.0},
         ]
         if not _summoned:
             _summoned = true
-            q.push_front({"type": "summon", "anim": "Chest_Open", "speed": 1.0, "windup": 1.0, "strike": 0.2, "recover": 0.9})
-        q.append({"type": "melee", "anim": "Zombie_Scratch", "speed": 1.0, "windup": 0.7, "strike": 0.2, "recover": 0.6, "dmg": 18.0})
+            q.push_front({"type": "summon", "anim": "Spellcast_Summon", "speed": 1.0, "windup": 1.0, "strike": 0.2, "recover": 0.9})
+        q.append({"type": "melee", "anim": "2H_Melee_Attack_Chop", "speed": 1.0, "windup": 0.7, "strike": 0.2, "recover": 0.6, "dmg": 18.0})
         return q
     return [
-        {"type": "grab", "anim": "Melee_Hook", "speed": 0.7, "windup": 0.85, "strike": 0.2, "recover": 0.9, "dmg": 34.0, "unblockable": true},
-        {"type": "volley", "anim": "OverhandThrow", "speed": 1.15, "windup": 0.7, "strike": 0.3, "recover": 0.6, "bolts": 8},
-        {"type": "melee", "anim": "Zombie_Scratch", "speed": 1.1, "windup": 0.6, "strike": 0.2, "recover": 0.5, "dmg": 18.0},
-        {"type": "grab", "anim": "Melee_Hook", "speed": 0.7, "windup": 0.85, "strike": 0.2, "recover": 0.9, "dmg": 34.0, "unblockable": true},
-        {"type": "volley", "anim": "OverhandThrow", "speed": 1.15, "windup": 0.7, "strike": 0.3, "recover": 0.6, "bolts": 8},
+        {"type": "grab", "anim": "1H_Melee_Attack_Stab", "speed": 0.7, "windup": 0.85, "strike": 0.2, "recover": 0.9, "dmg": 34.0, "unblockable": true},
+        {"type": "volley", "anim": "Spellcast_Shoot", "speed": 1.15, "windup": 0.7, "strike": 0.3, "recover": 0.6, "bolts": 8},
+        {"type": "slam", "anim": "2H_Melee_Attack_Spin", "speed": 1.0, "windup": 0.85, "strike": 0.2, "recover": 0.7, "dmg": 34.0, "unblockable": true},
+        {"type": "summon", "anim": "Spellcast_Summon", "speed": 1.0, "windup": 0.9, "strike": 0.2, "recover": 0.8, "minions": 3},
+        {"type": "volley", "anim": "Spellcast_Shoot", "speed": 1.15, "windup": 0.7, "strike": 0.3, "recover": 0.6, "bolts": 8},
     ]
 
 func _execute_move() -> void:
@@ -141,8 +147,10 @@ func _execute_move() -> void:
         _strike_with(dmg_of(34.0), true)
     elif t == "volley":
         _spawn_volley(int(_move.get("bolts", 5)))
+    elif t == "slam":
+        _slam(dmg_of(26.0), bool(_move.get("unblockable", false)))
     elif t == "summon":
-        _summon()
+        _summon(int(_move.get("minions", 2)))
 
 func dmg_of(fallback: float) -> float:
     return float(_move.get("dmg", fallback))
@@ -170,6 +178,32 @@ func _strike_with(dmg: float, unblockable: bool) -> void:
             continue
         n.take_damage(dmg, global_position, {"unblockable": unblockable, "source": self})
 
+func _slam(dmg: float, unblockable: bool) -> void:
+    AudioManager.play_3d("boss_roar", global_position, -4.0)
+    Fx.sparks(get_parent(), global_position + Vector3(0, 0.3, 0), Color(1.0, 0.55, 0.25), 34, 9.0, 0.7, 0.14)
+    Fx.ring(get_parent(), global_position, 5.6, Color(1.0, 0.5, 0.2), 0.25)
+    if cam_shake_target() != null:
+        cam_shake_target().add_shake(0.9)
+    Juice.hitstop(0.07, 0.1)
+    var space := get_world_3d().direct_space_state
+    var q := PhysicsShapeQueryParameters3D.new()
+    var shape := SphereShape3D.new()
+    shape.radius = 5.4
+    q.shape = shape
+    q.transform = Transform3D(Basis(), global_position + Vector3(0, 0.6, 0))
+    q.collision_mask = 1
+    q.collide_with_bodies = true
+    for h in space.intersect_shape(q, 8):
+        var n: Object = h.get("collider")
+        if n == null or not n.has_method("take_damage"):
+            continue
+        if not _has_los(n):
+            continue
+        n.take_damage(dmg, global_position, {"unblockable": unblockable, "source": self})
+
+func cam_shake_target() -> CameraRig:
+    return get_tree().get_first_node_in_group("camera_rig") as CameraRig
+
 func _spawn_volley(count: int) -> void:
     AudioManager.play_3d("swing_light", global_position, -3.0)
     var host := get_tree().current_scene
@@ -189,22 +223,23 @@ func _spawn_volley(count: int) -> void:
         bolt.velocity = v
         bolt.damage = 10.0
 
-func _summon() -> void:
+func _summon(count: int = 2) -> void:
     AudioManager.play_3d("boss_roar", global_position, -3.0)
     var host := get_tree().current_scene
     if host == null:
         return
-    for i in 2:
-        var thrall := EnemyBase.spawn("thrall")
-        host.add_child(thrall)
-        var ang := TAU * float(i) / 2.0 + 0.6
-        thrall.global_position = global_position + Vector3(cos(ang) * 3.4, 0.4, sin(ang) * 3.4)
+    for i in count:
+        var kind := "thrall" if i % 3 != 2 else "stalker"
+        var minion := EnemyBase.spawn(kind)
+        host.add_child(minion)
+        var ang := TAU * float(i) / float(count) + 0.6
+        minion.global_position = global_position + Vector3(cos(ang) * 3.4, 0.4, sin(ang) * 3.4)
 
 func _die() -> void:
     _set_state(State.DEAD)
     collision_layer = 0
     collision_mask = 4
-    actor.play_once_rev("LayToIdle", 0.55)
+    actor.play_once(String(cfg.get("death", "Death_C_Skeletons_Resurrect")), 0.8)
     AudioManager.play_3d("boss_roar", global_position, 0.0)
     Fx.sparks(get_parent(), global_position + Vector3(0, 1.6, 0), Color(1.0, 0.55, 0.25), 40, 8.0, 0.8, 0.16)
     Juice.hitstop(0.22, 0.05)

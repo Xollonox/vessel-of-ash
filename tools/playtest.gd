@@ -7,6 +7,7 @@ var failed := 0
 var _level: Node
 var _player: Player
 var _rig: CameraRig
+var _music_at_start := ""
 
 func _ready() -> void:
     print("=== VESSEL OF ASH — PLAYTEST ===")
@@ -15,6 +16,7 @@ func _ready() -> void:
     await _wait(40)
     _player = get_tree().get_first_node_in_group("player") as Player
     _rig = get_tree().get_first_node_in_group("camera_rig") as CameraRig
+    _music_at_start = AudioManager._music_key
     if _player == null:
         print("FATAL: no player in level")
         get_tree().quit(1)
@@ -48,6 +50,11 @@ func _ready() -> void:
     await _t_sprint()
     await _t_lock_cycle()
     await _t_awaken()
+    await _t_heavy_chain()
+    await _t_run_attack()
+    await _t_combo_hud()
+    await _t_boss_moves()
+    await _t_music()
     print("=== RESULT: %d/%d passed ===" % [passed, passed + failed])
     get_tree().quit(0 if failed == 0 else 1)
 
@@ -408,6 +415,94 @@ func _t_awaken() -> void:
         rising and clip.contains("Awaken") and now_chasing)
     e.queue_free()
     await _wait(6)
+
+func _t_heavy_chain() -> void:
+    _player.revive()
+    await _await_idle()
+    var e := _spawn_enemy("warden", _player.global_position + Vector3(0, 0, -1.6))
+    e.max_health = 500.0
+    e.health = 500.0
+    _player.force_heavy()
+    await _wait(40)
+    Input.action_press("heavy_attack")
+    await _wait(2)
+    Input.action_release("heavy_attack")
+    await _wait(70)
+    await _await_idle()
+    var dealt := 500.0 - e.health
+    _ok("heavy chains into a second heavy (dealt %.0f)" % dealt, dealt >= 44.0)
+    e.queue_free()
+    await _wait(6)
+
+func _t_run_attack() -> void:
+    _player.revive()
+    _player.global_position = Vector3(0, -20.8, -48.0)
+    _player.velocity = Vector3.ZERO
+    await _await_idle()
+    Input.action_press("move_forward")
+    Input.action_press("sprint")
+    await _wait(30)
+    Input.action_press("light_attack")
+    await _wait(2)
+    Input.action_release("light_attack")
+    await _wait(3)
+    var running := _player._attack_kind == "run"
+    Input.action_release("sprint")
+    Input.action_release("move_forward")
+    await _await_idle(200)
+    _ok("sprinting + light fires the running slash", running)
+
+func _t_combo_hud() -> void:
+    _player.revive()
+    await _await_idle()
+    var hud := get_tree().get_first_node_in_group("hud")
+    if hud == null:
+        _ok("combo counter registers on connect", false)
+        return
+    var e := _spawn_enemy("thrall", _player.global_position + Vector3(0, 0, -1.6))
+    e.max_health = 400.0
+    e.health = 400.0
+    _player.force_light()
+    await _wait(30)
+    var shown: bool = hud._combo_root.modulate.a > 0.5 and hud._combo >= 1
+    _ok("combo counter registers on connect (x%d)" % hud._combo, shown)
+    e.queue_free()
+    await _await_idle()
+
+func _t_boss_moves() -> void:
+    var b := get_tree().get_first_node_in_group("boss") as BossChoir
+    if b == null:
+        _ok("boss runs the skeleton move set", false)
+        return
+    b.set_physics_process(true)
+    b.global_position = _player.global_position + Vector3(0, 0, -3.0)
+    b._wake()
+    var skeleton_clip := false
+    var saw_ring := false
+    var guard := 0
+    while guard < 600:
+        guard += 1
+        await get_tree().physics_frame
+        var cur: String = b.actor.current()
+        if cur.begins_with("2H_") or cur.begins_with("Spellcast_") or cur.begins_with("1H_"):
+            skeleton_clip = true
+        for fx in get_tree().get_nodes_in_group("fx"):
+            if fx is MeshInstance3D and (fx as MeshInstance3D).mesh is TorusMesh:
+                saw_ring = true
+        if skeleton_clip and saw_ring:
+            break
+    _ok("boss plays skeleton clips and telegraphs a slam ring (clip=%s ring=%s)"
+        % [b.actor.current(), saw_ring], skeleton_clip and saw_ring)
+    b.set_physics_process(false)
+
+func _t_music() -> void:
+    var boss := get_tree().get_first_node_in_group("boss") as BossChoir
+    if boss != null:
+        boss.aggroed.emit()
+    await _wait(4)
+    var switched := AudioManager._music_key
+    _ok("music beds play and the boss crossfades in (%s -> %s)" % [_music_at_start, switched],
+        _music_at_start == "music_crypt" and switched == "music_boss")
 
 func _t_weapon_gear() -> void:
     await _await_idle()

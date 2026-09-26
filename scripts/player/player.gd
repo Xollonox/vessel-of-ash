@@ -36,6 +36,8 @@ const LIGHT := [
     {"clip": "Sword_Regular_C", "speed": 1.30, "hit_at": 0.46, "dmg": 18.0},
 ]
 const HEAVY := {"clip": "Sword_Heavy_Combo", "speed": 1.0, "hit_at": 0.45, "dmg": 30.0}
+const HEAVY_2 := {"clip": "Sword_Regular_C", "speed": 1.05, "hit_at": 0.34, "dmg": 22.0}
+const RUN_ATTACK := {"clip": "Sword_Dash", "speed": 1.35, "hit_at": 0.20, "dmg": 20.0}
 
 var max_health := 100.0
 var health := 100.0
@@ -61,6 +63,8 @@ var _footstep_t := 0.0
 var _spawn_yaw := 0.0
 var _sprinting := false
 var _sprint_t := 0.0
+var _chain := 0
+var _chain_until := 0.0
 
 func _ready() -> void:
     add_to_group("player")
@@ -145,6 +149,8 @@ func _to_idle() -> void:
     state = State.IDLE
     state_t = 0.0
     combo_index = 0
+    if _now() > _chain_until:
+        _chain = 0
     _play_idle()
 
 # ---------------------------------------------------------------- input ----
@@ -180,6 +186,9 @@ func _try_or_buffer(action: String) -> void:
             return
     elif (state == State.IDLE or state == State.MOVE) and action == "parry":
         _start_parry()
+        return
+    elif action == "light" and state == State.MOVE and _sprinting:
+        _begin_attack("run")
         return
     elif (state == State.IDLE or state == State.MOVE) and (action == "light" or action == "heavy"):
         _begin_attack(action)
@@ -258,11 +267,21 @@ func _begin_attack(kind: String) -> void:
     if kind == "light":
         combo_index = clampi(combo_index, 0, LIGHT.size() - 1)
         _attack = LIGHT[combo_index]
+    elif kind == "run":
+        combo_index = 0
+        _attack = RUN_ATTACK
+    elif kind == "heavy2":
+        combo_index = 0
+        _attack = HEAVY_2
     else:
         combo_index = 0
         _attack = HEAVY
     actor.play_once(_attack.clip, _attack.speed)
-    var lunge := 2.4 if kind == "light" else 3.2
+    var lunge := 2.4
+    if kind == "heavy" or kind == "heavy2":
+        lunge = 3.2
+    elif kind == "run":
+        lunge = 6.4
     velocity.x += -global_transform.basis.z.x * lunge
     velocity.z += -global_transform.basis.z.z * lunge
     AudioManager.play_var("swing_light" if kind == "light" else "swing_heavy", -8.0)
@@ -300,6 +319,10 @@ func _process_attack(delta: float) -> void:
         if _buffered == "heavy" and _attack_kind == "light":
             _buffered = ""
             _begin_attack("heavy")
+            return
+        if _buffered == "heavy" and _attack_kind == "heavy" and _attack_connected:
+            _buffered = ""
+            _begin_attack("heavy2")
             return
     if state_t >= clip_len:
         if not _attack_connected and combo_index < AnimLib.LIGHT_RECOVERY.size():
@@ -340,12 +363,21 @@ func _activate_hitbox(dmg: float, unblockable: bool) -> void:
                         Color(1.0, 0.78, 0.42), 18 if heavy else 12, 6.5 if heavy else 5.0, 0.35, 0.11)
     _attack_connected = connected
     if connected:
-        Juice.hitstop(0.10 if heavy else 0.055, 0.06 if heavy else 0.08)
+        if _now() <= _chain_until:
+            _chain += 1
+        else:
+            _chain = 1
+        _chain_until = _now() + 2.4
+        var hud := get_tree().get_first_node_in_group("hud")
+        if hud != null and hud.has_method("register_hit"):
+            hud.register_hit(_chain)
+        Juice.hitstop(0.13 if _attack_kind == "heavy2" else (0.10 if heavy else 0.055),
+            0.06 if heavy else 0.08)
         AudioManager.play_var("hit_heavy" if heavy else "hit_light", -4.0)
         if cam != null and is_instance_valid(cam):
-            cam.add_shake(0.55 if heavy else 0.35)
+            cam.add_shake(0.75 if _attack_kind == "heavy2" else (0.55 if heavy else 0.35))
             if heavy:
-                cam.fov_punch(3.5)
+                cam.fov_punch(4.5 if _attack_kind == "heavy2" else 3.5)
 
 # ---------------------------------------------------------------- dodge ----
 

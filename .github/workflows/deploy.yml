@@ -57,6 +57,18 @@ jobs:
             /tmp/sk/bin/python tools/gen_skins.py
           fi
 
+      - name: Generate procedural audio (SFX + ambient + music beds)
+        run: |
+          set -e
+          if python3 -c "import numpy" 2>/dev/null; then
+            python3 tools/gen_audio.py
+          else
+            python3 -m venv /tmp/au
+            /tmp/au/bin/pip install --quiet numpy
+            /tmp/au/bin/python tools/gen_audio.py
+          fi
+          ls -la assets/audio | head -30
+
       - name: Import project
         run: godot --headless --path . --import
 
@@ -116,14 +128,14 @@ jobs:
       - name: Publish release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v0.4
-          name: "Vessel of Ash — v0.4 (vertical slice)"
+          tag_name: v0.5
+          name: "Vessel of Ash — v0.5 (vertical slice)"
           body: |
             Third-person action vertical slice. Windows + Linux builds, built from source by CI.
 
             Play in your browser: https://${{ github.repository_owner }}.github.io/vessel-of-ash/
 
-            - 28/28 automated gameplay checks green
+            - 33/33 automated gameplay checks green
             - Enemies are real KayKit skeletons: 41-bone rigs, 95 baked clips, per-class weapons
               (thrall / stalker / warden) plus a new ranged Ossuary Mage that kites and casts
             - Skeletons claw up out of the floor the first time they notice you
@@ -132,6 +144,14 @@ jobs:
             - Sprint, lock-on target cycling, dodge/parry/heavy cancel windows, smoother camera
               with wall pull-in, gamepad look
             - ACES tonemapping, additive bloom, shadow-casting dais braziers, brighter torches
+            - v0.5: original score — a crypt drone bed and a 160 bpm Choir theme that crossfades in
+              when the boss wakes, plus a wind/rumble ambient layer
+            - v0.5: the Choir fights back with an arena-wide slam (telegraphed by an expanding ring),
+              bone volleys and skeleton summons; phase 3 is unblockable and summons stalkers too
+            - v0.5: combat depth — heavy chains into a heavy finisher, sprinting + light fires a
+              lunging running slash, on-screen combo counter
+            - v0.5: enemies read better — wardens feint their overhead into a fast poke, mages blink
+              away when crowded, the joystick rim sprints on touch
           files: |
             _site/VesselOfAsh_windows.zip
             _site/vessel_of_ash_linux.tar.gz

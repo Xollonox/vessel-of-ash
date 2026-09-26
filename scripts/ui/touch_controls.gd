@@ -122,6 +122,9 @@ func _end(idx: int) -> void:
 
 func _process(_delta: float) -> void:
     if not visible:
+        if _sprinting:
+            _sprinting = false
+            Input.action_release("sprint")
         return
     _ctl.queue_redraw()
     var now := Time.get_ticks_msec()
@@ -133,6 +136,14 @@ func _process(_delta: float) -> void:
 func _apply_move(v: Vector2) -> void:
     _axis("move_right", "move_left", v.x)
     _axis("move_back", "move_forward", v.y)
+    # pushing the stick to the rim sprints - the mobile equivalent of holding Shift
+    if v.length() >= SPRINT_RIM:
+        if not _sprinting:
+            _sprinting = true
+            Input.action_press("sprint", 1.0)
+    elif _sprinting:
+        _sprinting = false
+        Input.action_release("sprint")
 
 func _axis(pos_action: String, neg_action: String, value: float) -> void:
     if value > DEADZONE:
@@ -167,6 +178,9 @@ func _draw_ui() -> void:
         _ctl.draw_string(_font, c + Vector2(-w * 0.5, 5.0), txt, HORIZONTAL_ALIGNMENT_CENTER, -1, 13, Color(0.98, 0.94, 0.86, 0.9))
 
 # ------------------------------------------------------------- test hooks ----
+
+var _sprinting := false
+const SPRINT_RIM := 0.88
 
 func debug_set_move(v: Vector2) -> void:
     visible = true

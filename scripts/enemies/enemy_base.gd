@@ -44,6 +44,8 @@ const CONFIG := {
         "walk": "Walking_D_Skeletons", "walk_speed": 1.0, "attack": "2H_Melee_Attack_Chop",
         "atk_speed": 0.85, "name": "Bone Warden",
         "hit": "Hit_A", "death": "Death_C_Skeletons", "awaken": "Skeletons_Awaken_Floor_Long",
+        "feint": true, "feint_chance": 0.34, "feint_at": 0.42,
+        "feint_clip": "2H_Melee_Attack_Stab",
         "weapon": "res://assets/weapons/skeleton/Skeleton_Axe.gltf", "weapon_scale": 1.0,
         "weapon_rot": Vector3.ZERO,
     },
@@ -88,6 +90,8 @@ var _cur_attack: Dictionary = {}
 var _attack_count := 0
 var _alt := false
 var _rise_until := 0.0
+var _feint := false
+var _blink_ready_at := 0.0
 
 static func spawn(kind_name: String) -> EnemyBase:
     var e := EnemyBase.new()
@@ -117,7 +121,10 @@ func _ready() -> void:
     actor.weapon_rot = cfg.get("weapon_rot", Vector3.ZERO)
     add_child(actor)
     _player = get_tree().get_first_node_in_group("player")
+    rng.randomize()
     actor.play_loop(String(cfg.get("idle", "Idle_Combat")), 1.0)
+
+var rng := RandomNumberGenerator.new()
 
 func _now() -> float:
     return Time.get_ticks_msec() / 1000.0
@@ -166,6 +173,17 @@ func _physics_process(delta: float) -> void:
         State.WINDUP:
             _decay(delta, 1.4)
             _face_player(delta, 5.0)
+            if _feint and state_t >= float(cfg.get("feint_at", 0.34)):
+                _feint = false
+                _cur_attack = {"clip": String(cfg.get("feint_clip", "2H_Melee_Attack_Stab")),
+                    "windup": 0.16, "strike": 0.14, "dmg": float(cfg.dmg) * 0.6,
+                    "atk_speed": 1.35, "recover": 0.5}
+                state_t = 0.0
+                actor.play_once(String(_cur_attack.clip), 1.35)
+                AudioManager.play_3d("telegraph", global_position, -6.0, 1.25)
+                Fx.sparks(get_parent(), global_position + Vector3(0, 1.3, 0),
+                    Color(1.0, 0.85, 0.4), 12, 3.0, 0.3, 0.1)
+                return
             if state_t >= _windup_time():
                 _enter_strike()
         State.STRIKE:
@@ -232,10 +250,26 @@ func _process_chase(delta: float) -> void:
             _attack_count += 1
             _begin_windup()
 
+func _blink_away() -> void:
+    _blink_ready_at = _now() + float(cfg.get("blink_cd", 4.0))
+    var away := _flat(global_position - _player.global_position).normalized()
+    if away.length() < 0.01:
+        away = Vector3.FORWARD
+    Fx.sparks(get_parent(), global_position + Vector3(0, 1.0, 0), Color(0.55, 0.7, 1.0), 26, 5.0, 0.45, 0.12)
+    Fx.ring(get_parent(), global_position, 2.2, Color(0.5, 0.7, 1.0), 0.22)
+    global_position += away * 6.0 + Vector3(0, 0.2, 0)
+    Fx.sparks(get_parent(), global_position + Vector3(0, 1.0, 0), Color(0.6, 0.8, 1.0), 26, 5.0, 0.45, 0.12)
+    Fx.ring(get_parent(), global_position, 2.2, Color(0.5, 0.7, 1.0), 0.22)
+    actor.play_once("Spellcast_Raise", 1.3)
+    AudioManager.play_3d("dodge", global_position, -6.0)
+
 func _process_ranged(delta: float, d: float) -> void:
     var keep_min := float(cfg.get("keep_min", 6.5))
     var keep_max := float(cfg.get("keep_max", 13.0))
     var dir := _flat(_player.global_position - global_position).normalized()
+    if d < keep_min * 0.72 and _now() >= _blink_ready_at:
+        _blink_away()
+        return
     if d < keep_min:
         # too close: back off while still facing the player
         velocity.x = move_toward(velocity.x, -dir.x * float(cfg.speed), 14.0 * delta)
@@ -258,6 +292,7 @@ func _process_ranged(delta: float, d: float) -> void:
 func _begin_windup() -> void:
     _alt = cfg.has("alt") and _attack_count % int(cfg.get("alt_every", 3)) == 0
     _cur_attack = (cfg.get("alt", {}) as Dictionary).duplicate() if _alt else {}
+    _feint = _feint_trigger()
     _set_state(State.WINDUP)
     if _alt:
         actor.play_once(String(_cur_attack.get("clip", cfg.attack)), float(_cur_attack.get("atk_speed", 0.9)))
@@ -269,6 +304,15 @@ func _begin_windup() -> void:
 
 func _windup_time() -> float:
     return float(_cur_attack.get("windup", cfg.windup))
+
+## Wardens fake you out: the heavy overhead sometimes snaps into a fast poke,
+## so holding the parry on the long tell is a real gamble.
+func _feint_trigger() -> bool:
+    if _feint or _alt or not bool(cfg.get("feint", false)):
+        return false
+    if rng.randf() > float(cfg.get("feint_chance", 0.35)):
+        return false
+    return true
 
 func force_alt_windup() -> void:
     _attack_count = int(cfg.get("alt_every", 3))

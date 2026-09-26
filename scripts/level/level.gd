@@ -30,6 +30,8 @@ func _ready() -> void:
     hud = get_tree().get_first_node_in_group("hud") as GameHud
     start_ms = Time.get_ticks_msec()
     _seen[0] = true
+    AudioManager.play_ambient("ambient_ash", -21.0)
+    AudioManager.play_music("music_crypt", -12.0)
     if player != null:
         respawn_pos = player.global_position + Vector3(0, 0.2, 0)
         player.health_changed.connect(func(c: float, m: float) -> void:
@@ -159,12 +161,14 @@ func _on_boss_aggro() -> void:
     if hud != null and boss != null:
         hud.show_boss("THE OSSUARY CHOIR")
         hud.set_boss(boss.health, boss.max_health)
+    AudioManager.play_music("music_boss", -6.0)
 
 func _on_boss_died(_k: String) -> void:
     if _ended:
         return
     _ended = true
     AudioManager.stop_ambient()
+    AudioManager.stop_music()
     AudioManager.play("victory", -3.0)
     var secs := int((Time.get_ticks_msec() - start_ms) / 1000.0)
     var stats := "cleared in %d:%02d · deaths %d" % [secs / 60, secs % 60, deaths]

@@ -115,6 +115,62 @@ def main():
         vic[off:] += seg * 0.6
     save("victory", vic)
 
+    # ---- ambient bed: cold wind through the Cinderhold + distant rumble -----
+    n = int(12.0 * SR)
+    t = np.arange(n) / SR
+    wind = lp(noise(n), 420) * 0.5
+    gust = 0.55 + 0.45 * np.sin(2 * np.pi * 0.083 * t) * np.sin(2 * np.pi * 0.031 * t)
+    rumble = sine(38.0, n) * 0.22 + sine(57.0, n) * 0.12
+    bed = wind * gust + rumble
+    fade = int(1.2 * SR)
+    bed[:fade] *= np.linspace(0, 1, fade)
+    bed[-fade:] *= np.linspace(1, 0, fade)
+    save("ambient_ash", bed, peak=0.5)
+
+    # ---- music: crypt drone (slow, mournful) --------------------------------
+    n = int(20.0 * SR)
+    t = np.arange(n) / SR
+    music = (sine(73.42, n) * 0.30 + sine(110.0, n) * 0.20 + sine(146.83, n) * 0.14
+             + sine(196.0, n) * 0.07)
+    music *= 0.6 + 0.4 * np.sin(2 * np.pi * 0.05 * t)
+    music += lp(noise(n), 220) * 0.10
+    # a struck bell every five seconds, drifting
+    for k in range(4):
+        off = int((0.5 + k * 5.0) * SR)
+        if off + int(2.5 * SR) >= n:
+            break
+        seg = sine(146.83, int(2.5 * SR)) * env(int(2.5 * SR), 0.004, 1.1)
+        seg += sine(293.66, int(2.5 * SR)) * env(int(2.5 * SR), 0.004, 0.5) * 0.4
+        music[off:off + len(seg)] += seg * 0.22
+    fade = int(1.5 * SR)
+    music[:fade] *= np.linspace(0, 1, fade)
+    music[-fade:] *= np.linspace(1, 0, fade)
+    save("music_crypt", music, peak=0.45)
+
+    # ---- music: the Choir (fast, percussive, choral-ish) --------------------
+    n = int(16.0 * SR)
+    t = np.arange(n) / SR
+    beat = 0.375  # 160 bpm
+    boss = np.zeros(n)
+    # low drum on every beat, off-beat tick, rising drone
+    for k in range(int(16.0 / beat)):
+        off = int(k * beat * SR)
+        d = int(0.16 * SR)
+        if off + d < n:
+            boss[off:off + d] += sine(58.0, d) * env(d, 0.002, 0.06) * 0.55
+            boss[off:off + d] += lp(noise(d), 900) * env(d, 0.001, 0.03) * 0.18
+        off2 = int((k * beat + beat * 0.5) * SR)
+        d2 = int(0.05 * SR)
+        if off2 + d2 < n:
+            boss[off2:off2 + d2] += lp(noise(d2), 5200) * env(d2, 0.001, 0.012) * 0.10
+    boss += sine(73.42, n) * (0.16 + 0.06 * np.sin(2 * np.pi * 0.11 * t))
+    boss += sine(110.0, n) * 0.10
+    boss += sine(220.0, n) * 0.05 * (0.5 + 0.5 * np.sin(2 * np.pi * 0.05 * t))
+    fade = int(1.0 * SR)
+    boss[:fade] *= np.linspace(0, 1, fade)
+    boss[-fade:] *= np.linspace(1, 0, fade)
+    save("music_boss", boss, peak=0.55)
+
 
 if __name__ == "__main__":
     main()

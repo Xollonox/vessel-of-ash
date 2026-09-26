@@ -10,7 +10,13 @@ var distance := 4.9
 var pivot_height := 1.5
 var sensitivity := 0.0024
 var shake := 0.0
-var base_fov := 62.0
+var base_fov := 66.0
+var sprint_fov := 5.0
+var pad_sensitivity := 2.4
+var invert_y := false
+var _sprint_blend := 0.0
+var _cur_distance := 4.9
+var _pad_look := Vector2.ZERO
 
 var _cam: Camera3D
 var _lock_target: Node3D
@@ -32,10 +38,20 @@ func _unhandled_input(event: InputEvent) -> void:
             Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
         else:
             Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+    elif event is InputEventJoypadMotion:
+        # right stick orbit; Godot pads report axes 2/3 as RX/RY
+        var e := event as InputEventJoypadMotion
+        if e.axis == JOY_AXIS_RIGHT_X:
+            _pad_look.x = e.axis_value
+        elif e.axis == JOY_AXIS_RIGHT_Y:
+            _pad_look.y = e.axis_value
 
 func _physics_process(delta: float) -> void:
     if target == null or not is_instance_valid(target):
         return
+    if absf(_pad_look.x) > 0.08 or absf(_pad_look.y) > 0.08:
+        apply_look(_pad_look.x * pad_sensitivity * 8.0 * delta,
+                   _pad_look.y * pad_sensitivity * 8.0 * delta)
     var p := target.global_position
     var goal := p + Vector3(0, pivot_height, 0)
     global_position = global_position.lerp(goal, clampf(10.0 * delta, 0.0, 1.0))
@@ -48,25 +64,37 @@ func _physics_process(delta: float) -> void:
         pitch = lerpf(pitch, -0.06, clampf(2.4 * delta, 0.0, 1.0))
     var fwd := Vector3(-sin(yaw) * cos(pitch), sin(pitch), -cos(yaw) * cos(pitch)).normalized()
     var eye := global_position
-    var desired := eye - fwd * distance
+    # wall pull-in: probe from the pivot so the camera never pops through geometry
+    var goal_distance := distance
+    var desired := eye - fwd * goal_distance
     var space := get_world_3d().direct_space_state
     var q := PhysicsRayQueryParameters3D.create(eye, desired)
     q.collision_mask = 4
     var hit := space.intersect_ray(q)
     if not hit.is_empty():
-        desired = hit.get("position") + fwd * 0.28
+        goal_distance = maxf(1.1, eye.distance_to(hit.get("position")) - 0.32)
+        desired = eye - fwd * goal_distance
+    # snap in fast, ease back out slowly so the camera never jitters in corners
+    _cur_distance = move_toward(_cur_distance, goal_distance,
+        26.0 * delta if goal_distance < _cur_distance else 7.0 * delta)
+    desired = eye - fwd * _cur_distance
     if shake > 0.0:
         shake = maxf(0.0, shake - delta * 2.2)
         desired += Vector3(randf_range(-1.0, 1.0), randf_range(-0.7, 1.0), randf_range(-1.0, 1.0)) * shake * 0.09
     _cam.global_position = desired
     _cam.look_at(eye + fwd * 10.0, Vector3.UP)
+    if _cam.fov != base_fov + sprint_fov * _sprint_blend:
+        _cam.fov = lerpf(_cam.fov, base_fov + sprint_fov * _sprint_blend, clampf(6.0 * delta, 0.0, 1.0))
+
+func set_sprint_blend(t: float) -> void:
+    _sprint_blend = clampf(t, 0.0, 1.0)
 
 func add_shake(amount: float) -> void:
     shake = minf(1.4, shake + amount)
 
 func apply_look(dx: float, dy: float) -> void:
     yaw -= dx * sensitivity
-    pitch = clampf(pitch - dy * sensitivity, -1.0, 0.45)
+    pitch = clampf(pitch - dy * sensitivity * (-1.0 if invert_y else 1.0), -1.05, 0.52)
 
 func fov_punch(amount: float) -> void:
     if _cam == null:

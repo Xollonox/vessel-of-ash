@@ -77,7 +77,7 @@
 <header class="hero">
   <div class="hero-bg"><img id="hero-img" alt="Kael Ardyn standing in the Cinderhold"></div>
   <div class="hero-inner">
-    <p class="kicker">A Godot 4.7 vertical slice</p>
+    <p class="kicker">A Godot 4.7 vertical slice · v0.4</p>
     <h1>Vessel of Ash</h1>
     <p class="tag">You are <b>Kael Ardyn</b>. The Cinderhold has taken everything else — descend
     twenty-one metres of ash and iron, and silence <b>The Ossuary Choir</b>.</p>
@@ -85,7 +85,7 @@
       <a class="btn primary" href="./play/">▶&nbsp; Play in your browser</a>
       <a class="btn" href="https://github.com/Xollonox/vessel-of-ash/releases/latest">Download — Windows / Linux</a>
     </div>
-    <p class="note">Browser build ≈ 80&nbsp;MB · first load takes a moment · keyboard, mouse, gamepad <b>or touch</b></p>
+    <p class="note">Browser build ≈ 90&nbsp;MB · first load takes a moment · keyboard, mouse, gamepad <b>or touch</b></p>
   </div>
 </header>
 
@@ -94,9 +94,10 @@
   <p class="sec-sub">Seven beats, from the Gate of Ash down to the Choir's Maw. Real-time captures
   from the current build.</p>
   <div class="grid">
+    <figure><img data-shot="hero" alt="Bone thrall"><figcaption>Bone thrall — KayKit skeletons, 95 baked clips each</figcaption></figure>
+    <figure><img data-shot="hall" alt="Hall of Cinders"><figcaption>Hall of Cinders — modular stone floors, wall slabs and burning torches</figcaption></figure>
     <figure><img data-shot="combat" alt="Combat"><figcaption>Light combo — sword, blade trail, slash arc, hit-stop</figcaption></figure>
-    <figure><img data-shot="hall" alt="Hall of Cinders"><figcaption>Hall of Cinders — banners, pillars and burning torches</figcaption></figure>
-    <figure><img data-shot="touch" alt="Touch controls"><figcaption>Touch controls — virtual stick + buttons, playable on a phone</figcaption></figure>
+    <figure><img data-shot="gate" alt="Gate of Ash"><figcaption>Gate of Ash — the entry hall, dressed with the dungeon kit</figcaption></figure>
     <figure><img data-shot="boss" alt="The Ossuary Choir"><figcaption>The Ossuary Choir — three phases, one vessel</figcaption></figure>
   </div>
 </section>
@@ -112,17 +113,24 @@
       <p>Dodge i-frames are live on frame one. Parry within a 0.24&nbsp;s window to stagger the
       attacker — unless it's an unblockable, which you have to read and dodge.</p></div>
     <div class="card"><h3>Real animation</h3>
-      <p>Quaternius characters with the Universal Animation Library 2 — 43 clips retargeted onto
-      the 65-bone rig at load time, zero tracks dropped.</p></div>
+      <p>Kael runs the Quaternius rig with the Universal Animation Library 2 — 43 clips retargeted
+      at load time. Every enemy is a KayKit skeleton with its own 41-bone rig and 95 baked clips,
+      so they claw up out of the floor, swing, stagger and die in character.</p></div>
     <div class="card"><h3>Hit-stop juice</h3>
       <p>Freeze frames on impact, blade trails, slash crescents, impact sparks, camera FOV punch
       and shake — the whole fight reads at a glance.</p></div>
+    <div class="card"><h3>Four enemy classes</h3>
+      <p>Thralls, stalkers, wardens and the ranged Ossuary Mage — each with its own model, weapon
+      socket, attack set, wind-up timing and telegraph colour. Read the tell, then punish.</p></div>
+    <div class="card"><h3>World building</h3>
+      <p>Seven beats dressed with the KayKit dungeon kit: 4&nbsp;m modular floor tiles, wall slabs,
+      arched bays, balcony rails, crates, trunks, candles and loot — plus drifting ash in every room.</p></div>
     <div class="card"><h3>Touch controls</h3>
       <p>A virtual stick and action buttons appear on touchscreens — the same game, playable on
       a phone or tablet, straight from the browser.</p></div>
     <div class="card"><h3>Gear &amp; characters</h3>
       <p>Real weapons socketed to the hand bones, hairstyles rigged to the head, and hand-tinted
-      armour sets for Kael and every enemy — all CC0 assets, reworked in-engine.</p></div>
+      armour for Kael — all CC0 assets, reworked in-engine.</p></div>
   </div>
 </section>
 

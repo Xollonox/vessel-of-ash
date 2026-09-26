@@ -15,10 +15,31 @@
 Both packs are the standard FREE editions. License files ship next to the assets in
 `assets/models/characters/`.
 
+## 3D assets — KayKit (CC0 1.0 Universal, public domain)
+
+- **Character Pack: Skeletons 1.0** — Skeleton Warrior / Rogue / Minion / Mage
+  (41-bone rigs, 95 baked clips each) plus the matching axe, blade, staff, shields,
+  crossbow, arrows and quiver.
+  Source: https://kaylousberg.itch.io/kaykit-skeletons
+  License: CC0 1.0 (verified from the pack's LICENSE.txt)
+- **Dungeon Remastered 1.0** — modular 4 m dungeon kit: floor tiles (tile / dirt /
+  wood / grate), wall slabs, arched bays, doorways, stairs, barriers, pillars,
+  banners, torches, candles, chests, crates, barrels, shelves, tables, trunks,
+  beds, coins, keys and bottles.
+  Source: https://kaylousberg.itch.io/kaykit-dungeon-remastered
+  License: CC0 1.0
+- **Character Pack: Adventures 1.0** — one-handed sword, two-handed sword, dagger.
+
+License files ship next to the assets in `assets/models/skeletons/` and are
+re-downloaded by `tools/fetch_assets_extra.sh`.
+
 ## Audio
 
-All 14 sound effects are procedurally synthesized — no third-party audio.
-Generator: `tools/gen_audio.py` (numpy → 48 kHz mono 16-bit WAV).
+Real CC0 SFX from Kenney — **Impact Sounds** and **RPG Audio** packs (impacts,
+knife slices, footsteps, cloth, creaks, metal clicks) — with the procedural set from
+`tools/gen_audio.py` kept as a fallback. Licenses ship in `assets/audio_kenney/`.
+
+## Engine
 
 ## Engine
 

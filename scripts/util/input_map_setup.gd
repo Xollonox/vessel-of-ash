@@ -14,6 +14,11 @@ func _enter_tree() -> void:
     _add("lock_on", [_k(KEY_Q), _m(MOUSE_BUTTON_MIDDLE)])
     _add("interact", [_k(KEY_E)])
     _add("pause", [_k(KEY_ESCAPE), _jb(6)])
+    _add("sprint", [_k(KEY_SHIFT), _jb(7)])
+    _add("look_left", [_j(2, -1.0)])
+    _add("look_right", [_j(2, 1.0)])
+    _add("look_up", [_j(3, -1.0)])
+    _add("look_down", [_j(3, 1.0)])
 
 func _add(action: String, events: Array) -> void:
     if not InputMap.has_action(action):

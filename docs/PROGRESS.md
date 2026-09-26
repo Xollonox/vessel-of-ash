@@ -1,11 +1,35 @@
 # Vessel of Ash — Progress & How to Resume
 
-## State: playable vertical slice, 23/23 automated checks green, published
+## State: playable vertical slice, 28/28 automated checks green, published
 
 - **Browser build (GitHub Pages):** https://xollonox.github.io/vessel-of-ash/
 - **Public repo:** https://github.com/Xollonox/vessel-of-ash
 - **CI:** `.github/workflows/deploy.yml` — fetch assets → import → playtest → export
   Web + Linux + Windows → deploy to Pages → attach desktop builds to a release.
+
+## v0.4 additions (skeleton legions + architecture + feel)
+
+- **Skeleton enemies**: KayKit Character Pack Skeletons (CC0) — four models
+  (Minion / Rogue / Warrior / Mage), each with a 41-bone rig and **95 baked clips**.
+  `scripts/util/skeleton_actor.gd` wraps them behind the same surface as
+  `AnimatedActor`, so the AI code is unchanged.
+  - thrall → Skeleton_Minion (blade), stalker → Skeleton_Rogue (blade, unblockable stab),
+    warden → Skeleton_Warrior (axe, 2H), **mage → Skeleton_Mage (staff, ranged)**
+  - `Skeletons_Awaken_Floor` plays the first time an enemy notices you (new RISE state)
+  - per-class Hit / Death clips; corpses linger 2.3 s then shrink out
+- **Ranged class**: the Ossuary Mage keeps a 6.5–13 m band, retreats when crowded,
+  casts `Spellcast_Shoot` and lobs an arcing `VolleyBolt` at the player.
+- **Controls**: sprint (Shift / L3, 7.6 m/s with camera FOV kick), lock-on target
+  cycling, dodge/parry/heavy cancel windows after the hit frame, wider pitch clamp,
+  smoother wall pull-in on the camera (snap in, ease out), gamepad right-stick look.
+- **World building**: the whole level is dressed with the KayKit Dungeon Remastered
+  modular kit on its 4 m grid — textured floor tiles (tile / dirt / wood / grate
+  families with wear variants), 4 m wall slabs with arched bays, corridor walls
+  stepping down the Long Descent, balcony rails, door gaps, crates/trunks/shelves/
+  candles/keys/bottles and drifting ash motes in every room.
+- **Graphics**: ACES tonemap, additive bloom (level-weighted), denser fog, brighter
+  torches, shadow-casting braziers in the Choir's Maw, 8 torches down the descent.
+  Light budget 30 → 31.
 
 ## v0.3 additions (touch + gear + world)
 
@@ -28,14 +52,14 @@
 
 ## Verified
 
-- `tools/playtest.tscn` — **23/23 passing** (movement, camera-relative input,
+- `tools/playtest.tscn` — **28/28 passing** (movement, camera-relative input,
   dodge i-frames frame one, combo 12/12/18, heavy 30, front-arc only, enemy cone,
   LOS blocking, parry stagger, unblockable beats parry, hit-stop freeze + restore,
   slash VFX spawn, stalker unblockable leap, weapon+hair gear, touch joystick +
   button, blade trail, enemy death cleanup, checkpoint heal + respawn, boss phase
   transitions).
 - Web export boots in a browser (WebGL2 / Compatibility, single-threaded build).
-- Level generates clean: 25/28 lights used, ~109 KB scene.
+- Level generates clean: 31/31 lights used, ~340 KB scene.
 - All 43 UAL2 clips retarget onto the 65-bone character with 0 tracks dropped.
 
 ## Game-feel layer (v0.2 polish)

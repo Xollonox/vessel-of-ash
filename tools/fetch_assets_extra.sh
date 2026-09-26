@@ -19,16 +19,71 @@ cd ../..
 
 echo "-- dungeon props (KayKit)"
 cd assets/props/dungeon
-for f in torch_lit.gltf.glb torch_mounted.gltf.glb pillar.gltf.glb pillar_decorated.gltf.glb \
-         column.gltf.glb wall_arched.gltf.glb wall_doorway_sides.gltf.glb wall_gated.gltf.glb \
-         wall_pillar.gltf.glb rubble_large.gltf.glb rubble_half.gltf.glb \
-         sword_shield.gltf.glb sword_shield_gold.gltf.glb \
-         banner_patternA_red.gltf.glb banner_thin_red.gltf.glb banner_patternC_white.gltf.glb \
-         banner_shield_red.gltf.glb candle_triple.gltf.glb candle_lit.gltf.glb candle_melted.gltf.glb \
-         chest.glb chest_gold.glb barrel_small.gltf.glb barrel_large.gltf.glb \
-         crates_stacked.gltf.glb box_stacked.gltf.glb shelf_large.gltf.glb \
-         floor_tile_big_spikes.glb coin_stack_large.gltf.glb coin_stack_small.gltf.glb; do
-  curl -sfL -o "$f" "$KKD/$f"
+# KayKit mixes two extensions inside one pack (.gltf.glb and .glb), so try both.
+get_prop() {
+  local base="$1"
+  if [ -f "${base}.gltf.glb" ] || [ -f "${base}.glb" ]; then return 0; fi
+  curl -sfL -o "${base}.gltf.glb" "$KKD/${base}.gltf.glb" && return 0
+  curl -sfL -o "${base}.glb" "$KKD/${base}.glb" && return 0
+  echo "   !! missing prop ${base}"
+  return 0
+}
+for f in torch_lit torch_mounted torch \
+         pillar pillar_decorated column \
+         wall wall_arched wall_archedwindow_open \
+         wall_doorway wall_doorway_sides wall_gated \
+         wall_corner wall_corner_small wall_half \
+         wall_pillar wall_window_open wall_broken \
+         wall_crossing wall_endcap wall_Tsplit \
+         floor_tile_large floor_tile_small \
+         floor_tile_small_decorated floor_tile_small_broken_A \
+         floor_tile_small_broken_B floor_tile_small_weeds_A \
+         floor_tile_large_rocks floor_tile_big_grate \
+         floor_tile_grate floor_tile_big_spikes \
+         floor_wood_large floor_wood_large_dark \
+         floor_wood_small floor_dirt_large \
+         floor_dirt_large_rocky \
+         stairs stairs_wide stairs_narrow \
+         stairs_walled stairs_wood stairs_wood_decorated \
+         barrier barrier_half barrier_column \
+         barrier_corner \
+         rubble_large rubble_half \
+         sword_shield sword_shield_gold sword_shield_broken \
+         banner_patternA_red banner_thin_red banner_patternC_white \
+         banner_shield_red banner_triple_red \
+         candle_triple candle_lit candle_melted candle_thin_lit \
+         chest chest_gold barrel_small barrel_large \
+         barrel_small_stack barrel_large_decorated keg \
+         crates_stacked box_stacked box_large box_small \
+         shelf_large shelf_small shelves \
+         table_long table_long_broken table_medium \
+         table_small chair stool \
+         trunk_large_A trunk_medium_B trunk_small_C \
+         bed_decorated bed_floor \
+         coin_stack_large coin_stack_medium coin_stack_small \
+         coin key keyring keyring_hanging \
+         plate plate_food_A plate_small \
+         bottle_A_brown bottle_A_green \
+         bottle_B_brown bottle_B_green \
+         bottle_C_brown bottle_C_green; do
+  get_prop "$f"
+done
+cd ../../..
+
+echo "-- skeleton characters (KayKit skeletons)"
+mkdir -p assets/models/skeletons assets/weapons/skeleton
+KS="https://raw.githubusercontent.com/KayKit-Game-Assets/KayKit-Character-Pack-Skeletons-1.0/main/addons/kaykit_character_pack_skeletons"
+cd assets/models/skeletons
+for f in Skeleton_Warrior.glb Skeleton_Rogue.glb Skeleton_Minion.glb Skeleton_Mage.glb skeleton_texture.png; do
+  curl -sfL -o "$f" "$KS/Characters/gltf/$f"
+done
+curl -sfL -o LICENSE.txt "https://raw.githubusercontent.com/KayKit-Game-Assets/KayKit-Character-Pack-Skeletons-1.0/main/LICENSE.txt"
+cd ../../..
+cd assets/weapons/skeleton
+for f in Skeleton_Axe Skeleton_Blade Skeleton_Staff Skeleton_Shield_Large_A \
+         Skeleton_Shield_Small_A Skeleton_Crossbow Skeleton_Arrow Skeleton_Quiver; do
+  curl -sfL -o "$f.gltf" "$KS/Assets/gltf/$f.gltf"
+  curl -sfL -o "$f.bin" "$KS/Assets/gltf/$f.bin"
 done
 cd ../../..
 

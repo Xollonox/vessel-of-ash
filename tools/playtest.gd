@@ -43,6 +43,11 @@ func _ready() -> void:
     await _t_enemy_death()
     await _t_checkpoint()
     await _t_boss()
+    await _t_skeleton_rigs()
+    await _t_mage_bolt()
+    await _t_sprint()
+    await _t_lock_cycle()
+    await _t_awaken()
     print("=== RESULT: %d/%d passed ===" % [passed, passed + failed])
     get_tree().quit(0 if failed == 0 else 1)
 
@@ -311,9 +316,98 @@ func _t_enemy_death() -> void:
     await _wait(2)
     e.take_damage(999.0, _player.global_position, {})
     var died_now := e.is_dead()
-    await _wait(185)
+    await _wait(240)
     var freed := not is_instance_valid(e)
     _ok("enemy dies at zero hp and is cleaned up", died_now and freed)
+
+# ------------------------------------------------------------- v0.4 checks ----
+
+func _t_skeleton_rigs() -> void:
+    var report: Array = []
+    var all_ok := true
+    for kind in ["thrall", "stalker", "warden", "mage"]:
+        var e := _spawn_enemy(kind, _player.global_position + Vector3(4, 0, -4))
+        await _wait(6)
+        var a := e.actor
+        var clips := a.player.get_animation_list().size() if a.player != null else 0
+        var weapon_ok := a.weapon != null and a.weapon_tip != null
+        var bones := a.skeleton.get_bone_count() if a.skeleton != null else 0
+        report.append("%s:%d clips/%d bones/%s" % [kind, clips, bones, "armed" if weapon_ok else "unarmed"])
+        if clips < 50 or bones < 30 or not weapon_ok:
+            all_ok = false
+        e.queue_free()
+        await _wait(4)
+    _ok("all four skeleton kinds load rig + clips + weapon (%s)" % ", ".join(report), all_ok)
+
+func _t_mage_bolt() -> void:
+    var e := _spawn_enemy("mage", _player.global_position + Vector3(0, 0, -9.0))
+    e.set_physics_process(true)
+    e._wake()
+    var seen := false
+    for i in range(420):
+        await get_tree().physics_frame
+        for c in _level.get_children():
+            if c is VolleyBolt:
+                seen = true
+                break
+        if seen:
+            break
+    _ok("ossuary mage casts a bolt from range", seen)
+    e.queue_free()
+    for c in _level.get_children():
+        if c is VolleyBolt:
+            c.queue_free()
+    await _wait(10)
+
+func _t_sprint() -> void:
+    _player.revive()
+    # open ground: the Hall of Cinders centre, so nothing blocks the run-up
+    _player.global_position = Vector3(0, -20.8, -52.5)
+    _player.velocity = Vector3.ZERO
+    await _await_idle()
+    await _wait(10)
+    Input.action_press("move_forward")
+    await _wait(25)
+    var walk := Vector3(_player.velocity.x, 0.0, _player.velocity.z).length()
+    Input.action_press("sprint")
+    await _wait(25)
+    var run := Vector3(_player.velocity.x, 0.0, _player.velocity.z).length()
+    Input.action_release("sprint")
+    Input.action_release("move_forward")
+    await _await_idle()
+    _ok("sprint outruns the walk (%.2f m/s -> %.2f m/s)" % [walk, run], run > walk * 1.08)
+
+func _t_lock_cycle() -> void:
+    var a := _spawn_enemy("thrall", _player.global_position + Vector3(3.0, 0, -4.0))
+    var b := _spawn_enemy("thrall", _player.global_position + Vector3(-3.0, 0, -4.0))
+    await _wait(6)
+    _player.lock_target = null
+    _player._toggle_lock()
+    var first := _player.lock_target
+    _player._toggle_lock()
+    var second := _player.lock_target
+    _ok("lock-on cycles between targets", first != null and second != null and first != second)
+    _player.lock_target = null
+    a.queue_free()
+    b.queue_free()
+    await _wait(6)
+
+func _t_awaken() -> void:
+    var e := _spawn_enemy("thrall", _player.global_position + Vector3(0, 0, -3.0))
+    e.set_physics_process(true)
+    e._wake()
+    var rising := e.state == EnemyBase.State.RISE
+    var clip := e.actor.current()
+    var now_chasing := false
+    for i in range(420):
+        await get_tree().physics_frame
+        if e.state == EnemyBase.State.CHASE:
+            now_chasing = true
+            break
+    _ok("skeleton claws out of the floor on wake (%s -> chase %s)" % [clip, now_chasing],
+        rising and clip.contains("Awaken") and now_chasing)
+    e.queue_free()
+    await _wait(6)
 
 func _t_weapon_gear() -> void:
     await _await_idle()

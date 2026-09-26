@@ -5,7 +5,7 @@ extends Object
 ## Godot's Compatibility renderer silently drops every light past 32 with no
 ## error at all, so every light goes through add_light() with a hard budget.
 
-const LIGHT_BUDGET := 30
+const LIGHT_BUDGET := 31
 static var light_count := 0
 
 static func reset_lights() -> void:
@@ -94,7 +94,8 @@ static func sphere(parent: Node, name: String, radius: float, pos: Vector3, mate
     parent.add_child(mi)
     return mi
 
-static func add_light(parent: Node, pos: Vector3, color: Color, energy: float, range_m: float) -> OmniLight3D:
+static func add_light(parent: Node, pos: Vector3, color: Color, energy: float, range_m: float,
+        shadow: bool = false) -> OmniLight3D:
     if not claim_light():
         return null
     var l := OmniLight3D.new()
@@ -102,9 +103,46 @@ static func add_light(parent: Node, pos: Vector3, color: Color, energy: float, r
     l.light_color = color
     l.light_energy = energy
     l.omni_range = range_m
-    l.shadow_enabled = false
+    l.shadow_enabled = shadow
+    if shadow:
+        l.shadow_bias = 0.08
+        l.omni_shadow_mode = OmniLight3D.SHADOW_CUBE
     parent.add_child(l)
     return l
+
+## Drifting ash motes: slow, dim, and everywhere. Cheap way to add depth to a
+## dark room without touching the light budget.
+static func ash_motes(parent: Node3D, pos: Vector3, radius: float = 10.0,
+        amount: int = 40) -> CPUParticles3D:
+    var p := CPUParticles3D.new()
+    p.name = "AshMotes"
+    p.amount = amount
+    p.lifetime = 14.0
+    p.explosiveness = 0.0
+    p.direction = Vector3(0, -1, 0)
+    p.spread = 180.0
+    p.initial_velocity_min = 0.03
+    p.initial_velocity_max = 0.14
+    p.gravity = Vector3(0.02, -0.01, 0.01)
+    p.scale_amount_min = 0.015
+    p.scale_amount_max = 0.04
+    p.emission_shape = CPUParticles3D.EMISSION_SHAPE_BOX
+    p.emission_box_extents = Vector3(radius, 3.5, radius)
+    p.color = Color(0.85, 0.82, 0.8, 0.42)
+    var q := QuadMesh.new()
+    q.size = Vector2(0.05, 0.05)
+    var m := StandardMaterial3D.new()
+    m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+    m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+    m.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+    m.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+    m.vertex_color_use_as_albedo = true
+    m.cull_mode = BaseMaterial3D.CULL_DISABLED
+    q.material = m
+    p.mesh = q
+    parent.add_child(p)
+    p.position = pos
+    return p
 
 static func prop(parent: Node3D, path: String, pos: Vector3, yaw: float = 0.0, prop_scale: float = 1.0) -> Node3D:
     var ps: PackedScene = load(path)

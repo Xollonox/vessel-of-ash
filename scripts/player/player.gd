@@ -14,18 +14,21 @@ signal parried(target: Node3D)
 enum State { IDLE, MOVE, ATTACK, DODGE, PARRY, HURT, DEAD }
 
 const WALK_SPEED := 5.9
+const RUN_SPEED := 7.6
 const ACCEL := 38.0
-const FRICTION := 26.0
+const ACCEL_SPRINT := 30.0
+const FRICTION := 30.0
 const DODGE_SPEED := 12.5
-const DODGE_TIME := 0.34
-const DODGE_CD := 0.55
+const DODGE_TIME := 0.32
+const DODGE_CD := 0.42
 const DODGE_IFRAMES := 0.5
 const PARRY_TIME := 0.5
-const PARRY_WINDOW := 0.24
+const PARRY_WINDOW := 0.26
 const BUFFER_WINDOW := 0.35
-const HURT_TIME := 0.28
-const INVULN_AFTER_HIT := 0.75
+const HURT_TIME := 0.26
+const INVULN_AFTER_HIT := 0.7
 const LOCK_RANGE := 15.0
+const CANCEL_WINDOW := 0.12
 
 const LIGHT := [
     {"clip": "Sword_Regular_A", "speed": 1.15, "hit_at": 0.24, "dmg": 12.0},
@@ -56,6 +59,8 @@ var _attack_kind := ""
 var _move_dir := Vector3.ZERO
 var _footstep_t := 0.0
 var _spawn_yaw := 0.0
+var _sprinting := false
+var _sprint_t := 0.0
 
 func _ready() -> void:
     add_to_group("player")
@@ -201,25 +206,33 @@ func _handle_buffers() -> void:
 # ---------------------------------------------------------------- ground ----
 
 func _process_ground(delta: float) -> void:
-    var desired := _move_dir * WALK_SPEED
-    velocity.x = move_toward(velocity.x, desired.x, ACCEL * delta)
-    velocity.z = move_toward(velocity.z, desired.z, ACCEL * delta)
+    _sprinting = Input.is_action_pressed("sprint") and _move_dir != Vector3.ZERO \
+        and lock_target == null and state != State.PARRY
+    var move_speed := RUN_SPEED if _sprinting else WALK_SPEED
+    var accel := ACCEL_SPRINT if _sprinting else ACCEL
+    var desired := _move_dir * move_speed
+    velocity.x = move_toward(velocity.x, desired.x, accel * delta)
+    velocity.z = move_toward(velocity.z, desired.z, accel * delta)
     var speed := Vector3(velocity.x, 0.0, velocity.z).length()
+    _sprint_t = move_toward(_sprint_t, 1.0 if _sprinting else 0.0, 4.0 * delta)
+    if cam != null and is_instance_valid(cam):
+        cam.set_sprint_blend(_sprint_t)
     if lock_target != null and is_instance_valid(lock_target):
         _face_toward(_flat(lock_target.global_position - global_position), delta, 12.0)
     elif _move_dir != Vector3.ZERO:
-        _face_toward(_move_dir, delta, 14.0)
+        _face_toward(_move_dir, delta, 11.0 if _sprinting else 14.0)
     if speed > 0.4:
         state = State.MOVE
         if actor.current() != AnimLib.WALK:
             actor.play_loop(AnimLib.WALK, 1.0)
-        actor.set_speed(clampf(speed / 4.4, 0.7, 1.6))
+        actor.set_speed(clampf(speed / (4.4 if not _sprinting else 5.2), 0.75, 1.85))
         _footstep_t -= delta
         if _footstep_t <= 0.0:
-            _footstep_t = 0.42
+            _footstep_t = 0.34 if _sprinting else 0.42
             AudioManager.play_var("footstep", -18.0, 0.18)
     else:
         state = State.IDLE
+        _sprinting = false
         actor.set_speed(1.0)
         if actor.current() != AnimLib.IDLE:
             _play_idle()
@@ -278,6 +291,16 @@ func _process_attack(delta: float) -> void:
         combo_index += 1
         _begin_attack("light")
         return
+    # cancel window: once the swing has committed, parry and heavy may cut the tail
+    if state_t >= float(_attack.hit_at) + CANCEL_WINDOW:
+        if _buffered == "parry":
+            _buffered = ""
+            _start_parry()
+            return
+        if _buffered == "heavy" and _attack_kind == "light":
+            _buffered = ""
+            _begin_attack("heavy")
+            return
     if state_t >= clip_len:
         if not _attack_connected and combo_index < AnimLib.LIGHT_RECOVERY.size():
             var rec: String = AnimLib.LIGHT_RECOVERY[combo_index]
@@ -429,13 +452,30 @@ func is_dead() -> bool:
 
 func _toggle_lock() -> void:
     if lock_target != null:
+        # pressing again cycles to the next best target; a second press with
+        # nothing else in range releases the lock
+        var prev := lock_target
         lock_target = null
-        lock_changed.emit(null)
+        var nxt := _best_lock_target(prev)
+        lock_target = nxt
+        lock_changed.emit(nxt)
+        if nxt != null:
+            AudioManager.play_var("ui", -14.0)
+            return
+        AudioManager.play_var("ui", -16.0)
         return
+    lock_target = _best_lock_target(null)
+    lock_changed.emit(lock_target)
+    if lock_target != null:
+        AudioManager.play_var("ui", -14.0)
+
+func _best_lock_target(ignore: Node3D) -> Node3D:
     var best: Node3D = null
     var best_score := -INF
     for e in get_tree().get_nodes_in_group("enemy"):
         if not is_instance_valid(e) or not (e is Node3D):
+            continue
+        if e == ignore:
             continue
         if e.has_method("is_dead") and e.is_dead():
             continue
@@ -450,8 +490,7 @@ func _toggle_lock() -> void:
         if score > best_score:
             best_score = score
             best = e
-    lock_target = best
-    lock_changed.emit(best)
+    return best
 
 func _validate_lock() -> void:
     if lock_target != null:

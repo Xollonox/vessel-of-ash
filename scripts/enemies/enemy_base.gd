@@ -8,54 +8,67 @@ signal died(kind: String)
 signal health_changed(cur: float, maxv: float)
 signal aggroed
 
-enum State { SLEEP, CHASE, WINDUP, STRIKE, RECOVER, STAGGER, DEAD }
+enum State { SLEEP, RISE, CHASE, WINDUP, STRIKE, RECOVER, STAGGER, DEAD }
 
 const CONFIG := {
     "thrall": {
-        "hp": 60.0, "speed": 2.6, "dmg": 12.0, "range": 2.3, "aggro": 11.0,
-        "windup": 0.55, "strike": 0.18, "recover": 0.55, "cd": 1.1, "lunge": 0.0,
+        "hp": 60.0, "speed": 2.9, "dmg": 12.0, "range": 2.3, "aggro": 12.0,
+        "windup": 0.5, "strike": 0.18, "recover": 0.5, "cd": 1.0, "lunge": 0.0,
         "scale": 1.0, "unblockable": false, "col_r": 0.4, "col_h": 1.7,
-        "model": "res://assets/models/characters/Superhero_Male_FullBody.gltf",
-        "walk": "Zombie_Walk_Fwd", "walk_speed": 1.0, "attack": "Zombie_Scratch",
-        "atk_speed": 1.0, "name": "Thrall",
-        "skin": "res://assets/models/characters/skins/T_Male_THRALL.png",
-        "hair": "res://assets/hair/Hair_Beard.gltf",
+        "model": "res://assets/models/skeletons/Skeleton_Minion.glb",
+        "walk": "Walking_C", "walk_speed": 1.35, "attack": "1H_Melee_Attack_Slice_Diagonal",
+        "atk_speed": 1.1, "name": "Bone Thrall",
+        "hit": "Hit_A", "death": "Death_A", "awaken": "Skeletons_Awaken_Floor",
+        "weapon": "res://assets/weapons/skeleton/Skeleton_Blade.gltf", "weapon_scale": 1.0,
+        "weapon_rot": Vector3.ZERO,
     },
     "stalker": {
-        "hp": 45.0, "speed": 4.3, "dmg": 14.0, "range": 2.6, "aggro": 13.0,
-        "windup": 0.42, "strike": 0.15, "recover": 0.45, "cd": 0.9, "lunge": 6.5,
-        "scale": 0.95, "unblockable": false, "col_r": 0.38, "col_h": 1.65,
-        "model": "res://assets/models/characters/Superhero_Female_FullBody.gltf",
-        "walk": "Zombie_Walk_Fwd", "walk_speed": 1.55, "attack": "Melee_Hook",
-        "atk_speed": 1.15, "name": "Stalker",
+        "hp": 45.0, "speed": 4.5, "dmg": 14.0, "range": 2.6, "aggro": 14.0,
+        "windup": 0.4, "strike": 0.15, "recover": 0.42, "cd": 0.85, "lunge": 6.5,
+        "scale": 0.98, "unblockable": false, "col_r": 0.38, "col_h": 1.65,
+        "model": "res://assets/models/skeletons/Skeleton_Rogue.glb",
+        "walk": "Running_A", "walk_speed": 1.0, "attack": "1H_Melee_Attack_Slice_Horizontal",
+        "atk_speed": 1.25, "name": "Bone Stalker",
         "alt_every": 3,
         "alt": {"windup": 0.62, "strike": 0.16, "dmg": 22.0, "lunge": 9.0,
-                "unblockable": true, "clip": "Sword_Regular_C", "atk_speed": 0.85},
-        "skin": "res://assets/models/characters/skins/T_Female_STALKER.png",
-        "hair": "res://assets/hair/Hair_Long.gltf",
-        "weapon": "res://assets/weapons/dagger.gltf", "weapon_scale": 0.62,
-        "weapon_rot": Vector3(-90, 0, 0),
+                "unblockable": true, "clip": "1H_Melee_Attack_Stab", "atk_speed": 0.95},
+        "hit": "Hit_B", "death": "Death_B", "awaken": "Skeletons_Awaken_Standing",
+        "weapon": "res://assets/weapons/skeleton/Skeleton_Blade.gltf", "weapon_scale": 0.9,
+        "weapon_rot": Vector3.ZERO,
     },
     "warden": {
         "hp": 140.0, "speed": 2.0, "dmg": 34.0, "range": 2.9, "aggro": 10.0,
         "windup": 0.95, "strike": 0.22, "recover": 0.9, "cd": 1.6, "lunge": 2.0,
         "scale": 1.22, "unblockable": true, "col_r": 0.48, "col_h": 2.05,
-        "model": "res://assets/models/characters/Superhero_Male_FullBody.gltf",
-        "walk": "Walk_Carry", "walk_speed": 0.85, "attack": "TreeChopping",
-        "atk_speed": 0.8, "name": "Warden",
-        "skin": "res://assets/models/characters/skins/T_Male_WARDEN.png",
-        "hair": "res://assets/hair/Hair_Buzzed.gltf",
-        "weapon": "res://assets/weapons/sword_2handed.gltf", "weapon_scale": 0.5,
-        "weapon_rot": Vector3(-90, 0, 0),
+        "model": "res://assets/models/skeletons/Skeleton_Warrior.glb",
+        "walk": "Walking_D_Skeletons", "walk_speed": 1.0, "attack": "2H_Melee_Attack_Chop",
+        "atk_speed": 0.85, "name": "Bone Warden",
+        "hit": "Hit_A", "death": "Death_C_Skeletons", "awaken": "Skeletons_Awaken_Floor_Long",
+        "weapon": "res://assets/weapons/skeleton/Skeleton_Axe.gltf", "weapon_scale": 1.0,
+        "weapon_rot": Vector3.ZERO,
+    },
+    "mage": {
+        "hp": 70.0, "speed": 2.3, "dmg": 13.0, "range": 3.0, "aggro": 17.0,
+        "windup": 0.75, "strike": 0.2, "recover": 0.7, "cd": 1.9, "lunge": 0.0,
+        "scale": 1.05, "unblockable": false, "col_r": 0.42, "col_h": 1.8,
+        "model": "res://assets/models/skeletons/Skeleton_Mage.glb",
+        "walk": "Walking_A", "walk_speed": 1.1, "attack": "Spellcast_Shoot",
+        "atk_speed": 0.95, "name": "Ossuary Mage", "ranged": true,
+        "keep_min": 6.5, "keep_max": 13.0,
+        "hit": "Hit_B", "death": "Death_A", "awaken": "Skeletons_Awaken_Floor",
+        "weapon": "res://assets/weapons/skeleton/Skeleton_Staff.gltf", "weapon_scale": 1.0,
+        "weapon_rot": Vector3.ZERO,
     },
     "boss": {
         "hp": 600.0, "speed": 2.4, "dmg": 18.0, "range": 3.4, "aggro": 20.0,
         "windup": 0.8, "strike": 0.2, "recover": 0.7, "cd": 0.6, "lunge": 0.0,
-        "scale": 1.65, "unblockable": false, "col_r": 0.6, "col_h": 2.7,
-        "model": "res://assets/models/characters/Superhero_Male_FullBody.gltf",
-        "walk": "Zombie_Walk_Fwd", "walk_speed": 0.85, "attack": "Zombie_Scratch",
-        "atk_speed": 0.9, "name": "The Ossuary Choir",
-        "skin": "res://assets/models/characters/skins/T_Male_BOSS.png",
+        "scale": 1.75, "unblockable": false, "col_r": 0.6, "col_h": 2.7,
+        "model": "res://assets/models/skeletons/Skeleton_Mage.glb",
+        "walk": "Walking_D_Skeletons", "walk_speed": 0.8, "attack": "1H_Melee_Attack_Chop",
+        "atk_speed": 0.8, "name": "The Ossuary Choir",
+        "hit": "Hit_A", "death": "Death_C_Skeletons_Resurrect", "awaken": "Skeletons_Awaken_Standing",
+        "weapon": "res://assets/weapons/skeleton/Skeleton_Staff.gltf", "weapon_scale": 1.4,
+        "weapon_rot": Vector3.ZERO,
     },
 }
 
@@ -67,13 +80,14 @@ var state := State.SLEEP
 var state_t := 0.0
 var attack_cd_until := 0.0
 var stagger_until := 0.0
-var actor: AnimatedActor
+var actor: SkeletonActor
 
 var _player: Node3D
 var _hit_done := false
 var _cur_attack: Dictionary = {}
 var _attack_count := 0
 var _alt := false
+var _rise_until := 0.0
 
 static func spawn(kind_name: String) -> EnemyBase:
     var e := EnemyBase.new()
@@ -94,18 +108,16 @@ func _ready() -> void:
     shape.shape = cap
     shape.position = Vector3(0, float(cfg.col_h) * 0.5, 0)
     add_child(shape)
-    actor = AnimatedActor.new()
+    actor = SkeletonActor.new()
     actor.name = "Actor"
     actor.model_path = String(cfg.model)
     actor.scale_factor = float(cfg.scale)
-    actor.skin_texture = String(cfg.get("skin", ""))
     actor.weapon_path = String(cfg.get("weapon", ""))
-    actor.weapon_scale = float(cfg.get("weapon_scale", 0.55))
+    actor.weapon_scale = float(cfg.get("weapon_scale", 1.0))
     actor.weapon_rot = cfg.get("weapon_rot", Vector3.ZERO)
-    actor.hair_path = String(cfg.get("hair", ""))
     add_child(actor)
     _player = get_tree().get_first_node_in_group("player")
-    actor.play_loop(String(cfg.walk), float(cfg.walk_speed) * 0.0 + 0.0)
+    actor.play_loop(String(cfg.get("idle", "Idle_Combat")), 1.0)
 
 func _now() -> float:
     return Time.get_ticks_msec() / 1000.0
@@ -149,6 +161,8 @@ func _physics_process(delta: float) -> void:
                 _wake()
         State.CHASE:
             _process_chase(delta)
+        State.RISE:
+            _process_rise(delta)
         State.WINDUP:
             _decay(delta, 1.4)
             _face_player(delta, 5.0)
@@ -183,11 +197,29 @@ func _set_state(s: int) -> void:
 func _wake() -> void:
     _set_state(State.CHASE)
     aggroed.emit()
+    # Skeletons claw their way up out of the floor the first time they notice you.
+    var awaken := String(cfg.get("awaken", ""))
+    if awaken != "" and actor.has_clip(awaken):
+        actor.play_once(awaken, 1.0)
+        AudioManager.play_3d("creak", global_position, -6.0)
+        Fx.sparks(get_parent(), global_position + Vector3(0, 0.4, 0), Color(0.55, 0.6, 0.7), 14, 3.0, 0.4, 0.1)
+        _rise_until = _now() + actor.clip_len(awaken) * 0.85
+        _set_state(State.RISE)
+        return
     actor.play_loop(String(cfg.walk), float(cfg.walk_speed))
+
+func _process_rise(delta: float) -> void:
+    _decay(delta, 1.2)
+    if _now() >= _rise_until:
+        _set_state(State.CHASE)
+        actor.play_loop(String(cfg.walk), float(cfg.walk_speed))
 
 func _process_chase(delta: float) -> void:
     _face_player(delta, 6.0)
     var d := _dist_to_player()
+    if bool(cfg.get("ranged", false)):
+        _process_ranged(delta, d)
+        return
     if d > float(cfg.range) * 0.82:
         var dir := _flat(_player.global_position - global_position).normalized()
         velocity.x = move_toward(velocity.x, dir.x * float(cfg.speed), 16.0 * delta)
@@ -196,6 +228,29 @@ func _process_chase(delta: float) -> void:
             actor.play_loop(String(cfg.walk), float(cfg.walk_speed))
     else:
         _decay(delta, 1.4)
+        if _now() >= attack_cd_until:
+            _attack_count += 1
+            _begin_windup()
+
+func _process_ranged(delta: float, d: float) -> void:
+    var keep_min := float(cfg.get("keep_min", 6.5))
+    var keep_max := float(cfg.get("keep_max", 13.0))
+    var dir := _flat(_player.global_position - global_position).normalized()
+    if d < keep_min:
+        # too close: back off while still facing the player
+        velocity.x = move_toward(velocity.x, -dir.x * float(cfg.speed), 14.0 * delta)
+        velocity.z = move_toward(velocity.z, -dir.z * float(cfg.speed), 14.0 * delta)
+        if actor.current() != String(cfg.walk):
+            actor.play_loop(String(cfg.walk), float(cfg.walk_speed))
+    elif d > keep_max:
+        velocity.x = move_toward(velocity.x, dir.x * float(cfg.speed), 14.0 * delta)
+        velocity.z = move_toward(velocity.z, dir.z * float(cfg.speed), 14.0 * delta)
+        if actor.current() != String(cfg.walk):
+            actor.play_loop(String(cfg.walk), float(cfg.walk_speed))
+    else:
+        _decay(delta, 1.4)
+        if actor.current() != "Spellcasting":
+            actor.play_loop("Spellcasting", 1.0)
         if _now() >= attack_cd_until:
             _attack_count += 1
             _begin_windup()
@@ -234,6 +289,9 @@ func _enter_strike() -> void:
 func _do_strike() -> void:
     var dmg := float(_cur_attack.get("dmg", cfg.dmg))
     var unblockable := bool(_cur_attack.get("unblockable", cfg.unblockable))
+    if bool(cfg.get("ranged", false)) and _player != null and is_instance_valid(_player):
+        _cast_bolt(dmg)
+        return
     AudioManager.play_3d("swing_heavy" if (kind == "warden" or unblockable) else "swing_light", global_position, -6.0)
     var space := get_world_3d().direct_space_state
     var q := PhysicsShapeQueryParameters3D.new()
@@ -255,6 +313,23 @@ func _do_strike() -> void:
         if not _has_los(n):
             continue
         n.take_damage(dmg, global_position, {"unblockable": unblockable, "source": self})
+
+func _cast_bolt(dmg: float) -> void:
+    var origin := global_position + Vector3(0, 1.5, 0)
+    var aim: Vector3 = _player.global_position + Vector3(0, 0.9, 0)
+    var bolt := VolleyBolt.new()
+    get_parent().add_child(bolt)
+    bolt.global_position = origin
+    bolt.damage = dmg
+    bolt.floor_y = origin.y - 6.0
+    var flight := maxf(0.45, origin.distance_to(aim) / 15.0)
+    var vel := (aim - origin) / flight
+    vel.y += 0.5 * 6.0 * flight
+    bolt.velocity = vel
+    bolt.life = flight + 1.2
+    AudioManager.play_3d("swing_heavy", global_position, -9.0)
+    Fx.sparks(get_parent(), origin + (-global_transform.basis.z) * 0.5,
+        Color(0.6, 0.75, 1.0), 12, 3.0, 0.4, 0.1)
 
 func _has_los(n: Object) -> bool:
     var space := get_world_3d().direct_space_state
@@ -295,17 +370,18 @@ func stagger(t: float) -> void:
     stagger_until = t
     velocity.x = 0.0
     velocity.z = 0.0
-    actor.play_once("Hit_Knockback", 1.1)
+    actor.play_once(String(cfg.get("hit", "Hit_A")), 1.1)
 
 func _die() -> void:
     _set_state(State.DEAD)
     collision_layer = 0
     collision_mask = 4
-    actor.play_once_rev("LayToIdle", 0.8)
+    actor.play_once(String(cfg.get("death", "Death_A")), 0.9)
     AudioManager.play_3d("enemy_death", global_position, -4.0)
     Fx.sparks(get_parent(), global_position + Vector3(0, 1.0, 0), Color(0.95, 0.45, 0.25), 26, 6.5, 0.55, 0.13)
     Juice.hitstop(0.09, 0.08)
     died.emit(kind)
     var tw := create_tween()
-    tw.tween_interval(2.6)
+    tw.tween_interval(2.3)
+    tw.tween_property(actor, "scale", Vector3(0.01, 0.01, 0.01), 0.8)
     tw.tween_callback(queue_free)

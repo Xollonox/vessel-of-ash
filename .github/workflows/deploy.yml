@@ -116,16 +116,22 @@ jobs:
       - name: Publish release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v0.3
-          name: "Vessel of Ash — v0.3 (vertical slice)"
+          tag_name: v0.4
+          name: "Vessel of Ash — v0.4 (vertical slice)"
           body: |
             Third-person action vertical slice. Windows + Linux builds, built from source by CI.
 
             Play in your browser: https://${{ github.repository_owner }}.github.io/vessel-of-ash/
 
-            - 23/23 automated gameplay checks green
-            - Sword + blade trail, hair & tinted armour, dungeon dressing
-            - Kenney CC0 sound effects, touchscreen controls
+            - 28/28 automated gameplay checks green
+            - Enemies are real KayKit skeletons: 41-bone rigs, 95 baked clips, per-class weapons
+              (thrall / stalker / warden) plus a new ranged Ossuary Mage that kites and casts
+            - Skeletons claw up out of the floor the first time they notice you
+            - Level dressed with the KayKit dungeon kit: 4 m modular floor tiles, wall slabs with
+              arched bays, balcony rails, crates, trunks, candles, loot, drifting ash
+            - Sprint, lock-on target cycling, dodge/parry/heavy cancel windows, smoother camera
+              with wall pull-in, gamepad look
+            - ACES tonemapping, additive bloom, shadow-casting dais braziers, brighter torches
           files: |
             _site/VesselOfAsh_windows.zip
             _site/vessel_of_ash_linux.tar.gz

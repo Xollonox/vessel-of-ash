@@ -46,8 +46,16 @@ jobs:
 
       - name: Generate recoloured character skins
         run: |
-          python3 -m pip install --quiet pillow numpy
-          python3 tools/gen_skins.py
+          set -e
+          if python3 -c "import PIL, numpy" 2>/dev/null; then
+            echo "using preinstalled pillow + numpy"
+            python3 tools/gen_skins.py
+          else
+            echo "installing pillow + numpy in a venv"
+            python3 -m venv /tmp/sk
+            /tmp/sk/bin/pip install --quiet pillow numpy
+            /tmp/sk/bin/python tools/gen_skins.py
+          fi
 
       - name: Import project
         run: godot --headless --path . --import

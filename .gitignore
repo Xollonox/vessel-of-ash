@@ -1,0 +1,6 @@
+.godot/
+builds/
+dist/
+_site/
+*.tmp
+shots/

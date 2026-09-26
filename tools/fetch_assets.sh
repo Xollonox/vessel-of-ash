@@ -10,8 +10,8 @@ for f in Superhero_Male_FullBody.gltf Superhero_Male_FullBody.bin \
          Superhero_Female_FullBody.gltf Superhero_Female_FullBody.bin \
          T_Eye_Brown.png T_Eye_Normal.png T_Hair_1_BaseColor.png T_Hair_1_Normal.png \
          T_Hair_2_BaseColor.png T_Hair_2_Normal.png \
-         T_Superhero_Male_Dark.png T_Superhero_Male_Normal.png T_Superhero_Male_Roughness.png \
-         T_Superhero_Female_Dark_BaseColor.png T_Superhero_Female_Normal.png T_Superhero_Female_Roughness.png; do
+         T_Superhero_Male_Dark.png T_Superhero_Male_Ligh.png T_Superhero_Male_Normal.png T_Superhero_Male_Roughness.png \
+         T_Superhero_Female_Dark_BaseColor.png T_Superhero_Female_Light_BaseColor.png T_Superhero_Female_Normal.png T_Superhero_Female_Roughness.png; do
   curl -sfL -o "$f" "https://raw.githubusercontent.com/$R/main/$B/$f"
 done
 cp T_Eye_Normal.png T_Eye_Normal_png.png

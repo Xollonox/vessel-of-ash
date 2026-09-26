@@ -8,8 +8,12 @@ from PIL import Image
 SRC = "assets/models/characters"
 OUT = os.path.join(SRC, "skins")
 
-def load(name):
-    return np.asarray(Image.open(os.path.join(SRC, name)).convert("RGB")).astype(np.float32) / 255.0
+def load(name, fallback=None):
+    path = os.path.join(SRC, name)
+    if not os.path.exists(path) and fallback:
+        print("missing", name, "- using", fallback)
+        path = os.path.join(SRC, fallback)
+    return np.asarray(Image.open(path).convert("RGB")).astype(np.float32) / 255.0
 
 def save(arr, name, size=1024):
     os.makedirs(OUT, exist_ok=True)
@@ -34,8 +38,8 @@ def tone(a, gain, lift, sat):
     return a * gain + lift
 
 male_dark = load("T_Superhero_Male_Dark.png")
-male_light = load("T_Superhero_Male_Ligh.png")
-female_dark = load("T_Superhero_Female_Dark_BaseColor.png")
+male_light = load("T_Superhero_Male_Ligh.png", "T_Superhero_Male_Dark.png")
+female_dark = load("T_Superhero_Female_Dark_BaseColor.png", "T_Superhero_Male_Dark.png")
 
 # Kael - ash leather with a faint warm cast
 kael = tone(male_dark, 0.82, -0.03, 0.82)
